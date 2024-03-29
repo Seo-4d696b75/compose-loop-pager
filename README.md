@@ -16,8 +16,10 @@ But conventional implementation of pseudo-infinite scrolling, such as setting `p
 
 [HorizontalLoopPager](./app/src/main/java/com/seo4d696b75/android/loop_pager_sample/ui/pager/HorizontalLoopPager.kt)
 
-- ✅ Infinite horizontal scrolling
+- ✅ Infinite horizontal scrolling　 (not pseudo implementation!)
 - ✅ Works properly without ANR
 - ✅ Implemented without accompanist library
+- ✅ Same user interaction and animation as `HorizontalPager`
+
 
 <img src="https://github.com/Seo-4d696b75/compose-loop-pager/assets/25225028/992603df-93b3-4d29-bf8b-cf0f41d3f9ad" width="320">
