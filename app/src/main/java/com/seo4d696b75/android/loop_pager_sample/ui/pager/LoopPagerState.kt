@@ -1,31 +1,77 @@
 package com.seo4d696b75.android.loop_pager_sample.ui.pager
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import kotlin.math.floor
+import kotlin.math.roundToInt
 
 @Composable
-fun rememberLoopPagerState(): LoopPagerState {
-    return remember { LoopPagerState() }
+fun rememberLoopPagerState(
+    positionalThreshold: (totalDistance: Float) -> Float = { it * 0.5f },
+    velocityThreshold: Density.() -> Float = { 125.dp.toPx() },
+    animationSpec: AnimationSpec<Float> = spring(),
+): LoopPagerState {
+    val density = LocalDensity.current
+    return remember {
+        LoopPagerState(
+            positionalThreshold = positionalThreshold,
+            velocityThreshold = { velocityThreshold.invoke(density) },
+            animationSpec = animationSpec,
+        )
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Stable
-class LoopPagerState {
+class LoopPagerState(
+    positionalThreshold: (totalDistance: Float) -> Float,
+    velocityThreshold: () -> Float,
+    animationSpec: AnimationSpec<Float>,
+) {
+    internal val anchoredDraggableState = AnchoredDraggableState(
+        initialValue = 0,
+        positionalThreshold = positionalThreshold,
+        velocityThreshold = velocityThreshold,
+        animationSpec = animationSpec,
+    )
 
-    private val _offsetState = mutableIntStateOf(0)
     val offset: Int
-        get() = _offsetState.intValue
+        get() = anchoredDraggableState.requireOffset().roundToInt()
 
-    fun onDrag(delta: Int) {
-        _offsetState.intValue = this.offset + delta
-    }
+    val currentPage: Int
+        get() = anchoredDraggableState.currentValue
+
+    val targetPage: Int
+        get() = anchoredDraggableState.targetValue
 
     fun getVisiblePages(pageSize: Int): Iterable<Int> {
         val start = floor(-offset.toFloat() / pageSize).toInt()
         val end = floor((-offset + pageSize).toFloat() / pageSize).toInt()
 
         return start..end
+    }
+
+    fun updateAnchors(pageSize: Int) {
+        // set anchors for current and neighbor pages
+        anchoredDraggableState.updateAnchors(
+            DraggableAnchors {
+                listOf(
+                    currentPage - 1,
+                    currentPage,
+                    currentPage + 1,
+                ).forEach { index ->
+                    index at -index * pageSize.toFloat()
+                }
+            }
+        )
     }
 }

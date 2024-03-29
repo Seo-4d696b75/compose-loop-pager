@@ -1,12 +1,12 @@
 package com.seo4d696b75.android.loop_pager_sample.ui.pager
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.lazy.layout.LazyLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Constraints
 import kotlinx.collections.immutable.ImmutableList
 import kotlin.math.roundToInt
@@ -36,6 +36,9 @@ fun <T> HorizontalLoopPager(
             // calculate height from width and aspectRation
             val height = (width / aspectRatio).roundToInt()
 
+            // update scroll positions of visible pages
+            state.updateAnchors(width)
+
             // page indices to be drawn (may be negative!)
             val indices = state.getVisiblePages(width)
 
@@ -62,11 +65,9 @@ fun <T> HorizontalLoopPager(
         },
         modifier = modifier
             .clipToBounds()
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures { change, delta ->
-                    change.consume()
-                    state.onDrag(delta.roundToInt())
-                }
-            }
+            .anchoredDraggable(
+                state = state.anchoredDraggableState,
+                orientation = Orientation.Horizontal,
+            ),
     )
 }
