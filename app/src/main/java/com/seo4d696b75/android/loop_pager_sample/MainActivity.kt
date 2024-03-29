@@ -3,13 +3,10 @@ package com.seo4d696b75.android.loop_pager_sample
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -17,12 +14,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.seo4d696b75.android.loop_pager_sample.ui.pager.HorizontalLoopPager
 import com.seo4d696b75.android.loop_pager_sample.ui.theme.MyTheme
+import kotlinx.collections.immutable.toPersistentList
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,9 +39,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PagerSection(modifier: Modifier = Modifier) {
+    val items = remember {
+        (0..4).toPersistentList()
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -52,11 +53,13 @@ fun PagerSection(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.titleLarge,
         )
         Spacer(modifier = Modifier.height(24.dp))
-        HorizontalLoopPager(count = 5) {
+        HorizontalLoopPager(
+            items = items,
+            aspectRatio = 1f,
+        ) { item, _ ->
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
+                    .fillMaxSize()
                     .padding(horizontal = 12.dp),
             ) {
                 Box(
@@ -64,7 +67,7 @@ fun PagerSection(modifier: Modifier = Modifier) {
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "item: $it",
+                        text = "item: $item",
                         style = MaterialTheme.typography.headlineLarge,
                     )
                 }

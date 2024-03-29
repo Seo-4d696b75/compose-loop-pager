@@ -1,66 +1,72 @@
 package com.seo4d696b75.android.loop_pager_sample.ui.pager
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerScope
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.lazy.layout.LazyLayout
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.Constraints
+import kotlinx.collections.immutable.ImmutableList
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HorizontalLoopPager(
-    count: Int,
+fun <T> HorizontalLoopPager(
+    items: ImmutableList<T>,
+    aspectRatio: Float,
     modifier: Modifier = Modifier,
-    content: @Composable PagerScope.(page: Int) -> Unit,
+    state: LoopPagerState = rememberLoopPagerState(),
+    content: @Composable (item: T, page: Int) -> Unit,
 ) {
-    val state = rememberPagerState(
-        initialPage = count,
-        pageCount = { count * 3 },
-    )
+    val itemProvider = rememberItemProvider(items, content)
 
-    LaunchedEffect(state) {
-        // observe current page skipping while animation or user-interaction
-        snapshotFlow { state.settledPage to state.isScrollInProgress }
-            .filter { !it.second }
-            .map { it.first }
-            .collectLatest {
-                // jump without animation if needed
-                when {
-                    it < count -> it + count
-                    it >= count * 2 -> it - count
-                    else -> null
-                }?.let { idx ->
-                    launch {
-                        state.scrollToPage(idx)
+    if (itemProvider.itemCount < 2) {
+        // crash when scrolling
+        return
+    }
+
+    LazyLayout(
+        itemProvider = { itemProvider },
+        prefetchState = null,
+        measurePolicy = { constraints ->
+            // max width of constraints
+            val width = constraints.maxWidth
+            // calculate height from width and aspectRation
+            val height = (width / aspectRatio).roundToInt()
+
+            // page indices to be drawn (may be negative!)
+            val indices = state.getVisiblePages(width)
+
+            // constraints for drawing each page
+            val pageConstraints = Constraints(
+                maxWidth = width,
+                maxHeight = height,
+            )
+            val placeableMap = indices.associateWith {
+                // index must be normalized in [0, size)
+                val index = it.mod(itemProvider.itemCount)
+                measure(index, pageConstraints)
+            }
+
+            layout(width, height) {
+                placeableMap.forEach { (index, placeables) ->
+                    // calculate position to be drawn at
+                    val position = width * index + state.offset
+                    placeables.forEach { placeable ->
+                        placeable.placeRelative(position, 0)
                     }
                 }
             }
-    }
-
-    Box(
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        HorizontalPager(
-            state = state,
-        ) {
-            // normalize dummy index
-            val index = it.mod(count)
-            content(index)
-        }
-        Text(
-            text = "dummyIndex: ${state.currentPage}\nnormalizedIndex: ${state.currentPage.mod(count)}",
-            style = MaterialTheme.typography.labelLarge,
-        )
-    }
+        },
+        modifier = modifier
+            .clipToBounds()
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { change, delta ->
+                    change.consume()
+                    state.onDrag(delta.roundToInt())
+                }
+            }
+    )
 }
