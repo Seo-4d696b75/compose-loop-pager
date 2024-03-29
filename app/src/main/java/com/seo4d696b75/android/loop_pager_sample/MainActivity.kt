@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -56,6 +57,7 @@ fun PagerSection(modifier: Modifier = Modifier) {
         HorizontalLoopPager(
             items = items,
             aspectRatio = 1f,
+            contentPadding = PaddingValues(horizontal = 48.dp),
         ) { item, _ ->
             Card(
                 modifier = Modifier
