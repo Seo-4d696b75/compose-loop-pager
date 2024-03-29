@@ -8,8 +8,14 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -19,9 +25,29 @@ fun HorizontalLoopPager(
     content: @Composable PagerScope.(page: Int) -> Unit,
 ) {
     val state = rememberPagerState(
-        initialPage = (Int.MAX_VALUE / 2 / count) * count,
-        pageCount = { Int.MAX_VALUE },
+        initialPage = count,
+        pageCount = { count * 3 },
     )
+
+    LaunchedEffect(state) {
+        // observe current page skipping while animation or user-interaction
+        snapshotFlow { state.settledPage to state.isScrollInProgress }
+            .filter { !it.second }
+            .map { it.first }
+            .collectLatest {
+                // jump without animation if needed
+                when {
+                    it < count -> it + count
+                    it >= count * 2 -> it - count
+                    else -> null
+                }?.let { idx ->
+                    launch {
+                        state.scrollToPage(idx)
+                    }
+                }
+            }
+    }
+
     Box(
         contentAlignment = Alignment.TopCenter,
     ) {
