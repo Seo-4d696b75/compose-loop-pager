@@ -10,7 +10,7 @@ But conventional implementation of pseudo-infinite scrolling, such as setting `p
 ## Implementation
 
 - `LazyLayout` for infinite scrolling
-- `AnchoredDraggableState` for user-interaction and animation like orizinal `HorizontalPager`
+- `AnchoredDraggableState` for user-interaction and animation
 
 ## Features
 
@@ -20,6 +20,8 @@ But conventional implementation of pseudo-infinite scrolling, such as setting `p
 - ✅ Works properly without ANR
 - ✅ Implemented without accompanist library
 - ✅ Same user interaction and animation as `HorizontalPager`
+- ✅ Supports content padding like `HorizontalPager`
 
 
-<img src="https://github.com/Seo-4d696b75/compose-loop-pager/assets/25225028/992603df-93b3-4d29-bf8b-cf0f41d3f9ad" width="320">
+<img src="https://github.com/Seo-4d696b75/compose-loop-pager/assets/25225028/d449651d-b3cb-4f47-a1d6-f71092c94dd9" width="320">
+
