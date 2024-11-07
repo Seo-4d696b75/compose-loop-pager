@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.seo4d696b75.android.loop_pager_sample"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.seo4d696b75.android.loop_pager_sample"
@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
