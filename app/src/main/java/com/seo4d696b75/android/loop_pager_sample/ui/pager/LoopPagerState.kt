@@ -1,6 +1,8 @@
 package com.seo4d696b75.android.loop_pager_sample.ui.pager
 
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.DecayAnimationSpec
+import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -18,14 +20,16 @@ import kotlin.math.roundToInt
 fun rememberLoopPagerState(
     positionalThreshold: (totalDistance: Float) -> Float = { it * 0.5f },
     velocityThreshold: Density.() -> Float = { 125.dp.toPx() },
-    animationSpec: AnimationSpec<Float> = spring(),
+    snapAnimationSpec: AnimationSpec<Float> = spring(),
+    decayAnimationSpec: DecayAnimationSpec<Float> = exponentialDecay(),
 ): LoopPagerState {
     val density = LocalDensity.current
     return remember {
         LoopPagerState(
             positionalThreshold = positionalThreshold,
             velocityThreshold = { velocityThreshold.invoke(density) },
-            animationSpec = animationSpec,
+            snapAnimationSpec = snapAnimationSpec,
+            decayAnimationSpec = decayAnimationSpec,
         )
     }
 }
@@ -35,13 +39,15 @@ fun rememberLoopPagerState(
 class LoopPagerState(
     positionalThreshold: (totalDistance: Float) -> Float,
     velocityThreshold: () -> Float,
-    animationSpec: AnimationSpec<Float>,
+    snapAnimationSpec: AnimationSpec<Float>,
+    decayAnimationSpec: DecayAnimationSpec<Float>,
 ) {
     internal val anchoredDraggableState = AnchoredDraggableState(
         initialValue = 0,
         positionalThreshold = positionalThreshold,
         velocityThreshold = velocityThreshold,
-        animationSpec = animationSpec,
+        snapAnimationSpec = snapAnimationSpec,
+        decayAnimationSpec = decayAnimationSpec,
     )
 
     val offset: Int
