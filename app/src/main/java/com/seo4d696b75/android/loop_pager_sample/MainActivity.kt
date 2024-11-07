@@ -53,6 +53,7 @@ fun PagerSection(modifier: Modifier = Modifier) {
     }
     val pagerState = rememberLoopPagerState(pageCount = items.size)
     Column(
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
