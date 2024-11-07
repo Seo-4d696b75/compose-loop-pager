@@ -8,6 +8,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.animateTo
+import androidx.compose.foundation.gestures.snapTo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -150,6 +152,20 @@ class LoopPagerState(
         (-anchorSize..anchorSize).forEach { index ->
             val page = index + pageOffset
             index at -page * pageWidth.toFloat() + startPadding
+        }
+    }
+
+    suspend fun animateScrollToPage(page: Int) {
+        val index = page - pageOffset
+        if (index in -anchorSize..anchorSize) {
+            anchoredDraggableState.animateTo(index)
+        }
+    }
+
+    suspend fun scrollToPage(page: Int) {
+        val index = page - pageOffset
+        if (index in -anchorSize..anchorSize) {
+            anchoredDraggableState.snapTo(index)
         }
     }
 }
