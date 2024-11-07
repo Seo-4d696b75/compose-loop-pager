@@ -14,7 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -45,7 +46,16 @@ fun rememberLoopPagerState(
     @IntRange(from = 1) anchorSize: Int = max(pageCount / 2, 3),
 ): LoopPagerState {
     val density = LocalDensity.current
-    return remember {
+    return rememberSaveable(
+        saver = LoopPagerState.Saver(
+            pageCount = pageCount,
+            positionalThreshold = positionalThreshold,
+            velocityThreshold = { velocityThreshold.invoke(density) },
+            snapAnimationSpec = snapAnimationSpec,
+            decayAnimationSpec = decayAnimationSpec,
+            anchorSize = anchorSize,
+        )
+    ) {
         LoopPagerState(
             pageCount = pageCount,
             initialPage = initialPage,
@@ -167,5 +177,30 @@ class LoopPagerState(
         if (index in -anchorSize..anchorSize) {
             anchoredDraggableState.snapTo(index)
         }
+    }
+
+    companion object {
+        // current page is saved and will be restored
+        fun Saver(
+            pageCount: Int,
+            positionalThreshold: (totalDistance: Float) -> Float,
+            velocityThreshold: () -> Float,
+            snapAnimationSpec: AnimationSpec<Float>,
+            decayAnimationSpec: DecayAnimationSpec<Float>,
+            anchorSize: Int,
+        ): Saver<LoopPagerState, Int> = Saver(
+            save = { it.currentPage },
+            restore = {
+                LoopPagerState(
+                    pageCount = pageCount,
+                    initialPage = it,
+                    positionalThreshold = positionalThreshold,
+                    velocityThreshold = velocityThreshold,
+                    snapAnimationSpec = snapAnimationSpec,
+                    decayAnimationSpec = decayAnimationSpec,
+                    anchorSize = anchorSize,
+                )
+            },
+        )
     }
 }
