@@ -8,27 +8,37 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.lazy.layout.LazyLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.Constraints
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun <T> HorizontalLoopPager(
-    items: ImmutableList<T>,
+fun HorizontalLoopPager(
+    state: LoopPagerState,
     aspectRatio: Float,
     modifier: Modifier = Modifier,
-    state: LoopPagerState = rememberLoopPagerState(),
     contentPadding: PaddingValues = PaddingValues(),
-    content: @Composable (item: T, page: Int) -> Unit,
+    content: @Composable (page: Int) -> Unit,
 ) {
-    val itemProvider = rememberItemProvider(items, content)
+    val itemProvider = rememberItemProvider(state.pageCount, content)
 
     if (itemProvider.itemCount < 2) {
         // crash when scrolling
         return
+    }
+
+    LaunchedEffect(state) {
+        snapshotFlow { state.settlePage }
+            .distinctUntilChanged()
+            .collect {
+                state.updateAnchorsOnSettle()
+            }
     }
 
     LazyLayout(
@@ -47,11 +57,10 @@ fun <T> HorizontalLoopPager(
                 "more than 3 items required when both start and end contentPadding set!"
             }
 
-            // calculate height from width and aspectRation
-            val height = (pageWidth / aspectRatio).roundToInt()
+            state.updateAnchorsOnLayout(pageWidth, startPadding)
 
-            // update scroll positions of visible pages
-            state.updateAnchors(pageWidth, startPadding)
+            // calculate height from width and aspectRation
+            val height = min((pageWidth / aspectRatio).roundToInt(), constraints.maxHeight)
 
             // page indices to be drawn (may be negative!)
             val indices = state.getVisiblePages(containerWidth, pageWidth)

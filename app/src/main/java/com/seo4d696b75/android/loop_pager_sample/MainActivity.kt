@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.seo4d696b75.android.loop_pager_sample.ui.pager.HorizontalLoopPager
+import com.seo4d696b75.android.loop_pager_sample.ui.pager.rememberLoopPagerState
 import com.seo4d696b75.android.loop_pager_sample.ui.theme.MyTheme
 import kotlinx.collections.immutable.toPersistentList
 
@@ -45,6 +46,7 @@ fun PagerSection(modifier: Modifier = Modifier) {
     val items = remember {
         (0..4).toPersistentList()
     }
+    val pagerState = rememberLoopPagerState(pageCount = items.size)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -55,10 +57,11 @@ fun PagerSection(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalLoopPager(
-            items = items,
+            state = pagerState,
             aspectRatio = 1f,
             contentPadding = PaddingValues(horizontal = 48.dp),
-        ) { item, _ ->
+        ) { page ->
+            val item = items[page]
             Card(
                 modifier = Modifier
                     .fillMaxSize()
