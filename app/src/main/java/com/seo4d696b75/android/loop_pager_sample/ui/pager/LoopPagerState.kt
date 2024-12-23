@@ -122,46 +122,51 @@ class LoopPagerState(
     val targetPage: Int
         get() = anchoredDraggableState.targetValue + pageOffset
 
-    internal fun getVisiblePages(containerSize: Int, pageSize: Int): Iterable<Int> {
-        val start = floor(-offset.toFloat() / pageSize).toInt()
-        val end = floor((-offset + containerSize).toFloat() / pageSize).toInt()
+    internal fun getVisiblePages(
+        containerSize: Int,
+        pageSize: Int,
+        pageSpacing: Int,
+    ): Iterable<Int> {
+        val pageInterval = pageSize + pageSpacing
+        val start = floor((-offset + pageSpacing).toFloat() / pageInterval).toInt()
+        val end = floor((-offset + containerSize).toFloat() / pageInterval).toInt()
 
         return start..end
     }
 
-    private var latestPageSize: Int? = null
+    private var latestPageInterval: Int? = null
     private var latestStartPadding: Int? = null
 
     // update anchor positions if needed
-    internal fun updateAnchorsOnLayout(pageSize: Int, startPadding: Int) {
-        if (latestPageSize != pageSize && latestStartPadding != startPadding) {
-            latestPageSize = pageSize
+    internal fun updateAnchorsOnLayout(pageInterval: Int, startPadding: Int) {
+        if (latestPageInterval != pageInterval && latestStartPadding != startPadding) {
+            latestPageInterval = pageInterval
             latestStartPadding = startPadding
             anchoredDraggableState.updateAnchors(
-                newAnchors = calculateAnchors(pageSize, startPadding),
+                newAnchors = calculateAnchors(pageInterval, startPadding),
             )
         }
     }
 
     // update anchor positions if current page is changed
     internal fun updateAnchorsOnSettle() {
-        val pageSize = latestPageSize
+        val pageInterval = latestPageInterval
         val startPadding = latestStartPadding
         val diff = anchoredDraggableState.settledValue
-        if (pageSize != null && startPadding != null && diff != 0) {
+        if (pageInterval != null && startPadding != null && diff != 0) {
             // anchoredDraggableState.**Value = relative page index must be set 0
             pageOffset += diff
             anchoredDraggableState.updateAnchors(
-                newAnchors = calculateAnchors(pageSize, startPadding),
+                newAnchors = calculateAnchors(pageInterval, startPadding),
                 newTarget = 0,
             )
         }
     }
 
-    private fun calculateAnchors(pageSize: Int, startPadding: Int) = DraggableAnchors {
+    private fun calculateAnchors(pageInterval: Int, startPadding: Int) = DraggableAnchors {
         (-anchorSize..anchorSize).forEach { index ->
             val page = index + pageOffset
-            index at -page * pageSize.toFloat() + startPadding
+            index at -page * pageInterval.toFloat() + startPadding
         }
     }
 

@@ -78,12 +78,11 @@ fun SampleScreen(
                 state = horizontalPagerState,
                 aspectRatio = 1f,
                 contentPadding = PaddingValues(horizontal = 48.dp),
+                pageSpacing = 24.dp,
             ) { page ->
                 val item = items[page]
                 Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp),
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -130,13 +129,12 @@ fun SampleScreen(
                 state = verticalPagerState,
                 aspectRatio = 1f,
                 contentPadding = PaddingValues(vertical = 48.dp),
-                modifier = Modifier.height(360.dp),
+                pageSpacing = 24.dp,
+                modifier = Modifier.height(400.dp),
             ) { page ->
                 val item = items[page]
                 Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),

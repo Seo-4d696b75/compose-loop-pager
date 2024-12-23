@@ -12,8 +12,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.seo4d696b75.android.loop_pager_sample.ui.orientation.withOrientation
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 @Composable
@@ -22,6 +25,7 @@ fun HorizontalLoopPager(
     aspectRatio: Float,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    pageSpacing: Dp = 0.dp,
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -30,6 +34,7 @@ fun HorizontalLoopPager(
         aspectRatio = aspectRatio,
         modifier = modifier,
         contentPadding = contentPadding,
+        pageSpacing = pageSpacing,
         content = content,
     )
 }
@@ -40,6 +45,7 @@ fun VerticalLoopPager(
     aspectRatio: Float,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    pageSpacing: Dp = 0.dp,
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -48,6 +54,7 @@ fun VerticalLoopPager(
         aspectRatio = aspectRatio,
         modifier = modifier,
         contentPadding = contentPadding,
+        pageSpacing = pageSpacing,
         content = content,
     )
 }
@@ -60,6 +67,7 @@ private fun LoopPager(
     aspectRatio: Float,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    pageSpacing: Dp = 0.dp,
     content: @Composable (page: Int) -> Unit,
 ) {
     val itemProvider = rememberPagerItemProvider(state.pageCount, content)
@@ -87,19 +95,29 @@ private fun LoopPager(
             withOrientation(orientation) {
                 // max width from constraints and contentPadding
                 val containerSize = constraints.maxSizeInMainAxis
-                val startPadding =
-                    contentPadding.calculateStartPaddingInMainAxis(layoutDirection).roundToPx()
-                val endPadding =
-                    contentPadding.calculateEndPaddingInMainAxis(layoutDirection).roundToPx()
-                val pageSize = containerSize - startPadding - endPadding
-                require(pageSize > 0 && startPadding < pageSize / 2 && endPadding < pageSize / 2) {
-                    "contentPadding too large against constraints!"
-                }
-                require(itemProvider.itemCount >= 3 || startPadding <= 0 || endPadding <= 0) {
-                    "more than 3 items required when both start and end contentPadding set!"
+                val pageSpacingPx = pageSpacing.roundToPx()
+                require(pageSpacingPx >= 0) {
+                    "pageSpacing must be >= 0"
                 }
 
-                state.updateAnchorsOnLayout(pageSize, startPadding)
+                val startPadding = max(
+                    pageSpacingPx,
+                    contentPadding.calculateStartPaddingInMainAxis(layoutDirection).roundToPx(),
+                )
+                val endPadding = max(
+                    pageSpacingPx,
+                    contentPadding.calculateEndPaddingInMainAxis(layoutDirection).roundToPx(),
+                )
+                val pageSize = containerSize - startPadding - endPadding
+                require(pageSize > 0 && startPadding < pageSize / 2 && endPadding < pageSize / 2) {
+                    "contentPadding or pageSpacing too large against constraints!"
+                }
+                require(itemProvider.itemCount >= 3 || startPadding <= pageSpacingPx || endPadding <= pageSpacingPx) {
+                    "more than 3 items required when both start and end contentPadding set"
+                }
+
+                val pageInterval = pageSize + pageSpacingPx
+                state.updateAnchorsOnLayout(pageInterval, startPadding)
 
                 // calculate cross axis size from aspectRation
                 val sizeInCrossAxis = pageSize.toCrossAxis(aspectRatio).roundToInt().coerceIn(
@@ -108,7 +126,7 @@ private fun LoopPager(
                 )
 
                 // page indices to be drawn (may be negative!)
-                val indices = state.getVisiblePages(containerSize, pageSize)
+                val indices = state.getVisiblePages(containerSize, pageSize, pageSpacingPx)
 
                 // constraints for drawing each page
                 val pageConstraints = orientedConstraints(
@@ -130,7 +148,7 @@ private fun LoopPager(
                 ) {
                     placeableMap.forEach { (index, placeables) ->
                         // calculate position to be drawn at
-                        val offsetInMainAxis = pageSize * index + state.offset
+                        val offsetInMainAxis = pageInterval * index + state.offset
                         placeables.forEach { placeable ->
                             placeable.placeRelative(
                                 x = horizontalOf(offsetInMainAxis, 0),
