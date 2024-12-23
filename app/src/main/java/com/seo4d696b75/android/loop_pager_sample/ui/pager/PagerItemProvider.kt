@@ -9,22 +9,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 
 @Composable
-fun rememberItemProvider(
+internal fun rememberPagerItemProvider(
     itemCount: Int,
     content: @Composable (index: Int) -> Unit,
-) = remember { ItemProvider(itemCount, content) }.apply {
+): PagerItemProvider = remember { PagerItemProvider(itemCount, content) }.apply {
     itemCountState.intValue = itemCount
     contentState.value = content
 }
 
+
 @OptIn(ExperimentalFoundationApi::class)
-class ItemProvider internal constructor(
+internal class PagerItemProvider(
     itemCount: Int,
     content: @Composable (Int) -> Unit,
 ) : LazyLayoutItemProvider {
 
-    internal val itemCountState = mutableIntStateOf(itemCount)
-    internal val contentState = mutableStateOf(content)
+    val itemCountState = mutableIntStateOf(itemCount)
+    val contentState = mutableStateOf(content)
 
     override val itemCount by itemCountState
 

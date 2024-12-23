@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.lazy.layout.LazyLayout
+import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -26,7 +28,10 @@ fun HorizontalLoopPager(
     contentPadding: PaddingValues = PaddingValues(),
     content: @Composable (page: Int) -> Unit,
 ) {
-    val itemProvider = rememberItemProvider(state.pageCount, content)
+    val itemProvider = rememberPagerItemProvider(state.pageCount, content)
+    val itemProviderLambda: () -> LazyLayoutItemProvider = remember(itemProvider) {
+        { itemProvider }
+    }
 
     if (itemProvider.itemCount < 2) {
         // crash when scrolling
@@ -42,7 +47,7 @@ fun HorizontalLoopPager(
     }
 
     LazyLayout(
-        itemProvider = { itemProvider },
+        itemProvider = itemProviderLambda,
         prefetchState = null,
         measurePolicy = { constraints ->
             // max width from constraints and contentPadding
