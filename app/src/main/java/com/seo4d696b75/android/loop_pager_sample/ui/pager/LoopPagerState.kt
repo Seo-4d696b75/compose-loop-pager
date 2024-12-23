@@ -122,7 +122,7 @@ class LoopPagerState(
     val targetPage: Int
         get() = anchoredDraggableState.targetValue + pageOffset
 
-    fun getVisiblePages(containerSize: Int, pageSize: Int): Iterable<Int> {
+    internal fun getVisiblePages(containerSize: Int, pageSize: Int): Iterable<Int> {
         val start = floor(-offset.toFloat() / pageSize).toInt()
         val end = floor((-offset + containerSize).toFloat() / pageSize).toInt()
 
@@ -158,10 +158,10 @@ class LoopPagerState(
         }
     }
 
-    private fun calculateAnchors(pageWidth: Int, startPadding: Int) = DraggableAnchors {
+    private fun calculateAnchors(pageSize: Int, startPadding: Int) = DraggableAnchors {
         (-anchorSize..anchorSize).forEach { index ->
             val page = index + pageOffset
-            index at -page * pageWidth.toFloat() + startPadding
+            index at -page * pageSize.toFloat() + startPadding
         }
     }
 
