@@ -2,20 +2,19 @@ package com.seo4d696b75.android.loop_pager_sample.ui.pager
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.TargetedFlingBehavior
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.layout.LazyLayout
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.seo4d696b75.android.loop_pager_sample.ui.orientation.withOrientation
-import kotlinx.coroutines.flow.distinctUntilChanged
+import com.seo4d696b75.android.loop_pager_sample.ui.orientation.asScope
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -26,6 +25,9 @@ fun HorizontalLoopPager(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
+    flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
+    nestedScrollConnection: NestedScrollConnection =
+        LoopPagerDefaults.nestedScrollConnection(state, Orientation.Horizontal),
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -35,6 +37,8 @@ fun HorizontalLoopPager(
         modifier = modifier,
         contentPadding = contentPadding,
         pageSpacing = pageSpacing,
+        flingBehavior = flingBehavior,
+        nestedScrollConnection = nestedScrollConnection,
         content = content,
     )
 }
@@ -46,6 +50,9 @@ fun VerticalLoopPager(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
+    flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
+    nestedScrollConnection: NestedScrollConnection =
+        LoopPagerDefaults.nestedScrollConnection(state, Orientation.Vertical),
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -55,6 +62,8 @@ fun VerticalLoopPager(
         modifier = modifier,
         contentPadding = contentPadding,
         pageSpacing = pageSpacing,
+        flingBehavior = flingBehavior,
+        nestedScrollConnection = nestedScrollConnection,
         content = content,
     )
 }
@@ -68,6 +77,9 @@ private fun LoopPager(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
+    flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
+    nestedScrollConnection: NestedScrollConnection =
+        LoopPagerDefaults.nestedScrollConnection(state, orientation),
     content: @Composable (page: Int) -> Unit,
 ) {
     val itemProvider = rememberPagerItemProvider(state.pageCount, content)
@@ -80,19 +92,11 @@ private fun LoopPager(
         return
     }
 
-    LaunchedEffect(state) {
-        snapshotFlow { state.settlePage }
-            .distinctUntilChanged()
-            .collect {
-                state.updateAnchorsOnSettle()
-            }
-    }
-
     LazyLayout(
         itemProvider = itemProviderLambda,
         prefetchState = null,
         measurePolicy = { constraints ->
-            withOrientation(orientation) {
+            with(orientation.asScope()) {
                 // max width from constraints and contentPadding
                 val containerSize = constraints.maxSizeInMainAxis
                 val pageSpacingPx = pageSpacing.roundToPx()
@@ -116,9 +120,6 @@ private fun LoopPager(
                     "more than 3 items required when both start and end contentPadding set"
                 }
 
-                val pageInterval = pageSize + pageSpacingPx
-                state.updateAnchorsOnLayout(pageInterval, startPadding)
-
                 // calculate cross axis size from aspectRation
                 val sizeInCrossAxis = pageSize.toCrossAxis(aspectRatio).roundToInt().coerceIn(
                     minimumValue = constraints.minSizeInCrossAxis,
@@ -126,7 +127,7 @@ private fun LoopPager(
                 )
 
                 // page indices to be drawn (may be negative!)
-                val indices = state.getVisiblePages(containerSize, pageSize, pageSpacingPx)
+                val indices = state.onLayout(containerSize, pageSize, startPadding)
 
                 // constraints for drawing each page
                 val pageConstraints = orientedConstraints(
@@ -148,11 +149,11 @@ private fun LoopPager(
                 ) {
                     placeableMap.forEach { (index, placeables) ->
                         // calculate position to be drawn at
-                        val offsetInMainAxis = pageInterval * index + state.offset
+                        val positionInMainAxis = state.calculatePosition(index)
                         placeables.forEach { placeable ->
                             placeable.placeRelative(
-                                x = horizontalOf(offsetInMainAxis, 0),
-                                y = verticalOf(offsetInMainAxis, 0),
+                                x = horizontalOf(positionInMainAxis, 0),
+                                y = verticalOf(positionInMainAxis, 0),
                             )
                         }
                     }
@@ -161,9 +162,12 @@ private fun LoopPager(
         },
         modifier = modifier
             .clipToBounds()
-            .anchoredDraggable(
-                state = state.anchoredDraggableState,
+            .scrollable(
+                state = state,
                 orientation = orientation,
+                enabled = true,
+                flingBehavior = flingBehavior,
+                interactionSource = state.interactionSource,
             ),
     )
 }

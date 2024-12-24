@@ -57,11 +57,11 @@ fun SampleScreen(
         val animate = remember(scope) {
             { diff: Int ->
                 scope.launch {
-                    val page = horizontalPagerState.currentPage + diff
+                    val page = horizontalPagerState.settlePage + diff
                     horizontalPagerState.animateScrollToPage(page)
                 }
                 scope.launch {
-                    val page = verticalPagerState.currentPage + diff
+                    val page = verticalPagerState.settlePage + diff
                     verticalPagerState.animateScrollToPage(page)
                 }
             }

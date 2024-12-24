@@ -1,209 +1,188 @@
 package com.seo4d696b75.android.loop_pager_sample.ui.pager
 
-import androidx.annotation.IntRange
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.DecayAnimationSpec
-import androidx.compose.animation.core.exponentialDecay
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.animateTo
-import androidx.compose.foundation.gestures.snapTo
+import androidx.compose.foundation.MutatePriority
+import androidx.compose.foundation.gestures.ScrollScope
+import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
+import kotlin.math.absoluteValue
+import kotlin.math.ceil
 import kotlin.math.floor
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
  * @param pageCount number of repeating page cycles
  * @param initialPage first page to be displayed
- * @param positionalThreshold Threshold for the amount of drag
- *  to determine whether to snap to the next page in a user's swipe operation
- * @param velocityThreshold Speed threshold for determining whether to snap to the next page
- *   in a user's fling operation (pixels/sec)
- * @param snapAnimationSpec default animation of page snapping
- * @param decayAnimationSpec animation used for a fling operation
- * @param anchorSize anchors to be places on both sides relative to the current page position.
  */
 @Composable
 fun rememberLoopPagerState(
     pageCount: Int,
     initialPage: Int = 0,
-    positionalThreshold: (totalDistance: Float) -> Float = { it * 0.5f },
-    velocityThreshold: Density.() -> Float = { 125.dp.toPx() },
-    snapAnimationSpec: AnimationSpec<Float> = spring(),
-    decayAnimationSpec: DecayAnimationSpec<Float> = exponentialDecay(),
-    @IntRange(from = 1) anchorSize: Int = max(pageCount / 2, 3),
 ): LoopPagerState {
-    val density = LocalDensity.current
     return rememberSaveable(
         saver = LoopPagerState.Saver(
             pageCount = pageCount,
-            positionalThreshold = positionalThreshold,
-            velocityThreshold = { velocityThreshold.invoke(density) },
-            snapAnimationSpec = snapAnimationSpec,
-            decayAnimationSpec = decayAnimationSpec,
-            anchorSize = anchorSize,
         )
     ) {
         LoopPagerState(
             pageCount = pageCount,
             initialPage = initialPage,
-            positionalThreshold = positionalThreshold,
-            velocityThreshold = { velocityThreshold.invoke(density) },
-            snapAnimationSpec = snapAnimationSpec,
-            decayAnimationSpec = decayAnimationSpec,
-            anchorSize = anchorSize,
         )
     }.also {
         it.pageCount = pageCount
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Stable
 class LoopPagerState(
     pageCount: Int,
     initialPage: Int,
-    positionalThreshold: (totalDistance: Float) -> Float,
-    velocityThreshold: () -> Float,
-    snapAnimationSpec: AnimationSpec<Float>,
-    decayAnimationSpec: DecayAnimationSpec<Float>,
-    // due to limitation of AnchoredDraggableState,
-    // anchor size can not be changed dynamically
-    private val anchorSize: Int,
-) {
+) : ScrollableState {
+
+    private val scrollableState = ScrollableState(::performScroll)
+
     var pageCount by mutableIntStateOf(pageCount)
         internal set
 
-    private var pageOffset = initialPage
-
-    // pageIndex = pageOffset + anchoredDraggableState.value
-    internal val anchoredDraggableState = AnchoredDraggableState(
-        initialValue = 0,
-        positionalThreshold = positionalThreshold,
-        velocityThreshold = velocityThreshold,
-        snapAnimationSpec = snapAnimationSpec,
-        decayAnimationSpec = decayAnimationSpec,
-    )
-
     /**
-     * drawing position offset in pixels
-     */
-    val offset: Int
-        get() = anchoredDraggableState.requireOffset().roundToInt()
-
-    /**
-     * current page index. **may be negative value**
-     */
-    val currentPage: Int
-        get() = anchoredDraggableState.currentValue + pageOffset
-
-    val settlePage: Int
-        get() = anchoredDraggableState.settledValue + pageOffset
-
-    /**
-     * target page index.
+     * Current page index.
      *
-     * - When a user is swiping the pager and snapping to the next page is detected,
-     *   [currentPage] ± 1 will be returned.
-     * - Otherwise, the same value of [currentPage] will be returned.
+     * This index may be
+     * - negative value
+     * - non-integer while scrolling or snap (fling) animation running.
      */
-    val targetPage: Int
-        get() = anchoredDraggableState.targetValue + pageOffset
+    var currentPage: Float by mutableFloatStateOf(initialPage.toFloat())
+        internal set
 
-    internal fun getVisiblePages(
+    /**
+     * An index of page to which the current pager should be snapped.
+     *
+     * This index must be the same value of [currentPage]
+     * when no scroll or snap (fling) animation is running.
+     * This snap position only takes account of the scroll offset,
+     * not the current scroll (fling) velocity.
+     */
+    val snapPage: Int by derivedStateOf {
+        /*val pageSize = this.pageSize
+        val pageSpacing = this.pageSpacing
+        val adjustedPage = if (pageSize == 0 || pageSpacing == 0) {
+            currentPage
+        } else {
+            val pageInterval = pageSize + pageSpacing
+            val diff = pageSpacing * 0.5f / pageInterval
+            currentPage + diff
+        }
+        adjustedPage.roundToInt()*/
+        currentPage.roundToInt()
+    }
+
+    /**
+     * An index of page to which the pager should be snapped.
+     *
+     * Unlike [snapPage], this index can only be updated when a user scrolling is completed
+     * and the final snap position is determined.
+     */
+    var targetPage: Int by mutableIntStateOf(initialPage)
+        internal set
+
+    private var previousSettlePage = initialPage
+
+    /**
+     * An index of currently displayed page.
+     *
+     * Unlike [snapPage] or [targetPage],
+     * this index is NOT changed while user scrolling or snap (fling) animation running.
+     */
+    val settlePage: Int by derivedStateOf {
+        val current = this.currentPage
+        val target = this.targetPage
+        if ((target - current).absoluteValue < 1e-6) {
+            previousSettlePage = target
+            target
+        } else {
+            previousSettlePage
+        }
+    }
+
+    internal var pageSize: Int = 0
+    private var startPadding: Int = 0
+
+    /**
+     * Updates layout size and get page indices to be shown
+     */
+    internal fun onLayout(
         containerSize: Int,
         pageSize: Int,
-        pageSpacing: Int,
+        startPadding: Int,
     ): Iterable<Int> {
-        val pageInterval = pageSize + pageSpacing
-        val start = floor((-offset + pageSpacing).toFloat() / pageInterval).toInt()
-        val end = floor((-offset + containerSize).toFloat() / pageInterval).toInt()
+        this.pageSize = pageSize
+        this.startPadding = startPadding
+        val start = -startPadding.toFloat() / pageSize + currentPage
+        val end = start + containerSize / pageSize
 
-        return start..end
+        return floor(start).roundToInt()..ceil(end).roundToInt()
     }
 
-    private var latestPageInterval: Int? = null
-    private var latestStartPadding: Int? = null
+    internal fun calculatePosition(page: Int): Int {
+        return (startPadding + pageSize * (page - currentPage)).roundToInt()
+    }
 
-    // update anchor positions if needed
-    internal fun updateAnchorsOnLayout(pageInterval: Int, startPadding: Int) {
-        if (latestPageInterval != pageInterval && latestStartPadding != startPadding) {
-            latestPageInterval = pageInterval
-            latestStartPadding = startPadding
-            anchoredDraggableState.updateAnchors(
-                newAnchors = calculateAnchors(pageInterval, startPadding),
-            )
+    // scroll logic
+    private fun performScroll(delta: Float): Float {
+        val interval = pageSize
+        return if (interval > 0) {
+            currentPage -= (delta / interval)
+            // consume all scroll amount
+            delta
+        } else {
+            0f
         }
     }
 
-    // update anchor positions if current page is changed
-    internal fun updateAnchorsOnSettle() {
-        val pageInterval = latestPageInterval
-        val startPadding = latestStartPadding
-        val diff = anchoredDraggableState.settledValue
-        if (pageInterval != null && startPadding != null && diff != 0) {
-            // anchoredDraggableState.**Value = relative page index must be set 0
-            pageOffset += diff
-            anchoredDraggableState.updateAnchors(
-                newAnchors = calculateAnchors(pageInterval, startPadding),
-                newTarget = 0,
-            )
-        }
+    internal val interactionSource = MutableInteractionSource()
+
+    override val isScrollInProgress by derivedStateOf {
+        (currentPage - settlePage).absoluteValue > 1e-6
     }
 
-    private fun calculateAnchors(pageInterval: Int, startPadding: Int) = DraggableAnchors {
-        (-anchorSize..anchorSize).forEach { index ->
-            val page = index + pageOffset
-            index at -page * pageInterval.toFloat() + startPadding
-        }
-    }
+    override fun dispatchRawDelta(delta: Float) = scrollableState.dispatchRawDelta(delta)
+
+    override suspend fun scroll(
+        scrollPriority: MutatePriority,
+        block: suspend ScrollScope.() -> Unit
+    ) = scrollableState.scroll(scrollPriority, block)
+
+    override val canScrollForward = true
+
+    override val canScrollBackward = true
 
     suspend fun animateScrollToPage(page: Int) {
-        val index = page - pageOffset
-        if (index in -anchorSize..anchorSize) {
-            anchoredDraggableState.animateTo(index)
-        }
+        // TODO
     }
 
-    suspend fun scrollToPage(page: Int) {
-        val index = page - pageOffset
-        if (index in -anchorSize..anchorSize) {
-            anchoredDraggableState.snapTo(index)
-        }
+    fun scrollToPage(page: Int) {
+        currentPage = page.toFloat()
+        targetPage = page
     }
 
     companion object {
         // current page is saved and will be restored
         fun Saver(
             pageCount: Int,
-            positionalThreshold: (totalDistance: Float) -> Float,
-            velocityThreshold: () -> Float,
-            snapAnimationSpec: AnimationSpec<Float>,
-            decayAnimationSpec: DecayAnimationSpec<Float>,
-            anchorSize: Int,
         ): Saver<LoopPagerState, Int> = Saver(
-            save = { it.currentPage },
+            save = { it.snapPage },
             restore = {
                 LoopPagerState(
                     pageCount = pageCount,
                     initialPage = it,
-                    positionalThreshold = positionalThreshold,
-                    velocityThreshold = velocityThreshold,
-                    snapAnimationSpec = snapAnimationSpec,
-                    decayAnimationSpec = decayAnimationSpec,
-                    anchorSize = anchorSize,
                 )
             },
         )
