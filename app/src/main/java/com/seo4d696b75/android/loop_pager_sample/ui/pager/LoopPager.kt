@@ -18,6 +18,19 @@ import com.seo4d696b75.android.loop_pager_sample.ui.orientation.asScope
 import kotlin.math.max
 import kotlin.math.roundToInt
 
+/**
+ * A pager that can be scrolled in horizontal direction infinitely.
+ *
+ * All the pages in this pager have the same size,
+ * defined by max horizontal constraints and [aspectRatio].
+ *
+ * @param state The state to control this pager
+ * @param aspectRatio a ratio `width / height` of each page size.
+ * @param contentPadding a padding around the whole content.
+ *   Only horizontal sides of this padding are applied.
+ * @param flingBehavior Used to control snap or fling animation after user scrolling.
+ * @param content composable of each page.
+ */
 @Composable
 fun HorizontalLoopPager(
     state: LoopPagerState,
@@ -43,6 +56,19 @@ fun HorizontalLoopPager(
     )
 }
 
+/**
+ * A pager that can be scrolled in vertical direction infinitely.
+ *
+ * All the pages in this pager have the same size,
+ * defined by max vertical constraints and [aspectRatio].
+ *
+ * @param state The state to control this pager
+ * @param aspectRatio a ratio `width / height` of each page size.
+ * @param contentPadding a padding around the whole content.
+ *   Only vertical sides of this padding are applied.
+ * @param flingBehavior Used to control snap or fling animation after user scrolling.
+ * @param content composable of each page.
+ */
 @Composable
 fun VerticalLoopPager(
     state: LoopPagerState,

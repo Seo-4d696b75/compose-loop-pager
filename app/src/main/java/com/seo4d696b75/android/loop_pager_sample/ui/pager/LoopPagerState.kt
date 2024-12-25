@@ -66,10 +66,10 @@ class LoopPagerState(
         internal set
 
     /**
-     * An index of page to which the current pager should be snapped.
+     * An index of page to which the current pager will be snapped.
      *
      * This index must be the same value of [page]
-     * when no scroll or snap (fling) animation is running.
+     * when no scroll or snap (fling) animation is running ([isScrollInProgress] == `false`).
      * This snap position only takes account of the scroll offset,
      * not the current scroll (fling) velocity.
      */
@@ -102,7 +102,8 @@ class LoopPagerState(
      * An index of currently displayed page.
      *
      * Unlike [currentPage] or [targetPage],
-     * this index is NOT changed while user scrolling or snap (fling) animation running.
+     * this index is NOT changed while user scrolling or snap (fling) animation running
+     * ([isScrollInProgress] == `true`).
      */
     val settlePage: Int by derivedStateOf {
         val current = this.page
@@ -169,10 +170,19 @@ class LoopPagerState(
         block: suspend ScrollScope.() -> Unit
     ) = scrollableState.scroll(scrollPriority, block)
 
+    /**
+     * Always returns `true` because this pager can be scrolled infinitely.
+     */
     override val canScrollForward = true
 
+    /**
+     * Always returns `true` because this pager can be scrolled infinitely.
+     */
     override val canScrollBackward = true
 
+    /**
+     * Scroll to a given [page] with animation.
+     */
     suspend fun animateScrollToPage(
         page: Int,
         animationSpec: AnimationSpec<Float> = spring(),
@@ -198,6 +208,9 @@ class LoopPagerState(
         }
     }
 
+    /**
+     * Scroll (jump immediately without animation) to a given [page].
+     */
     fun scrollToPage(page: Int) {
         this.page = page.toFloat()
         targetPage = page
