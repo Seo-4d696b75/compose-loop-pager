@@ -20,14 +20,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.seo4d696b75.android.loop_pager_sample.ui.nestedscroll.filterUserInput
 import com.seo4d696b75.android.loop_pager_sample.ui.pager.HorizontalLoopPager
 import com.seo4d696b75.android.loop_pager_sample.ui.pager.VerticalLoopPager
 import com.seo4d696b75.android.loop_pager_sample.ui.pager.rememberLoopPagerState
@@ -40,13 +43,15 @@ import kotlinx.coroutines.launch
 fun LoopPagerSection(
     modifier: Modifier = Modifier,
 ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection.filterUserInput()),
         topBar = {
             TopAppBar(
-                title = {
-                    Text(text = "LoopPager")
-                },
+                title = { Text(text = "LoopPager") },
+                scrollBehavior = scrollBehavior,
             )
         },
     ) {
@@ -140,9 +145,9 @@ fun LoopPagerSection(
             VerticalLoopPager(
                 state = verticalPagerState,
                 aspectRatio = 1f,
-                contentPadding = PaddingValues(vertical = 48.dp),
+                contentPadding = PaddingValues(top = 48.dp, bottom = 24.dp),
                 pageSpacing = 24.dp,
-                modifier = Modifier.height(400.dp),
+                modifier = Modifier.height(360.dp),
             ) { page ->
                 val item = items[page]
                 Card(
