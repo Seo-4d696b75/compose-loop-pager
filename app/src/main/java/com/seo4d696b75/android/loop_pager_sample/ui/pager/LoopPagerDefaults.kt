@@ -50,11 +50,11 @@ internal class LoopPagerSnapLayoutProvider(
 ) : SnapLayoutInfoProvider {
     override fun calculateSnapOffset(velocity: Float): Float {
         // snap to the closest page
-        val snapPage = state.snapPage
+        val snapPage = state.currentPage
         val interval = state.pageSize
         return if (interval > 0) {
             state.targetPage = snapPage
-            -(snapPage - state.currentPage) * interval
+            -(snapPage - state.page) * interval
         } else {
             0f
         }
@@ -64,7 +64,7 @@ internal class LoopPagerSnapLayoutProvider(
         // snap to the closed page position around the decayOffset
         val interval = state.pageSize
         return if (interval > 0) {
-            val currentPage = state.currentPage
+            val currentPage = state.page
             val decayPage = currentPage - decayOffset / interval
             val snapPage = decayPage.roundToInt()
             state.targetPage = snapPage

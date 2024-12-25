@@ -59,18 +59,18 @@ class LoopPagerState(
      * - negative value
      * - non-integer while scrolling or snap (fling) animation running.
      */
-    var currentPage: Float by mutableFloatStateOf(initialPage.toFloat())
+    var page: Float by mutableFloatStateOf(initialPage.toFloat())
         internal set
 
     /**
      * An index of page to which the current pager should be snapped.
      *
-     * This index must be the same value of [currentPage]
+     * This index must be the same value of [page]
      * when no scroll or snap (fling) animation is running.
      * This snap position only takes account of the scroll offset,
      * not the current scroll (fling) velocity.
      */
-    val snapPage: Int by derivedStateOf {
+    val currentPage: Int by derivedStateOf {
         /*val pageSize = this.pageSize
         val pageSpacing = this.pageSpacing
         val adjustedPage = if (pageSize == 0 || pageSpacing == 0) {
@@ -81,13 +81,13 @@ class LoopPagerState(
             currentPage + diff
         }
         adjustedPage.roundToInt()*/
-        currentPage.roundToInt()
+        page.roundToInt()
     }
 
     /**
      * An index of page to which the pager should be snapped.
      *
-     * Unlike [snapPage], this index can only be updated when a user scrolling is completed
+     * Unlike [currentPage], this index can only be updated when a user scrolling is completed
      * and the final snap position is determined.
      */
     var targetPage: Int by mutableIntStateOf(initialPage)
@@ -98,11 +98,11 @@ class LoopPagerState(
     /**
      * An index of currently displayed page.
      *
-     * Unlike [snapPage] or [targetPage],
+     * Unlike [currentPage] or [targetPage],
      * this index is NOT changed while user scrolling or snap (fling) animation running.
      */
     val settlePage: Int by derivedStateOf {
-        val current = this.currentPage
+        val current = this.page
         val target = this.targetPage
         if ((target - current).absoluteValue < 1e-6) {
             previousSettlePage = target
@@ -125,21 +125,21 @@ class LoopPagerState(
     ): Iterable<Int> {
         this.pageSize = pageSize
         this.startPadding = startPadding
-        val start = -startPadding.toFloat() / pageSize + currentPage
+        val start = -startPadding.toFloat() / pageSize + page
         val end = start + containerSize / pageSize
 
         return floor(start).roundToInt()..ceil(end).roundToInt()
     }
 
     internal fun calculatePosition(page: Int): Int {
-        return (startPadding + pageSize * (page - currentPage)).roundToInt()
+        return (startPadding + pageSize * (page - this.page)).roundToInt()
     }
 
     // scroll logic
     private fun performScroll(delta: Float): Float {
         val interval = pageSize
         return if (interval > 0) {
-            currentPage -= (delta / interval)
+            page -= (delta / interval)
             // consume all scroll amount
             delta
         } else {
@@ -150,7 +150,7 @@ class LoopPagerState(
     internal val interactionSource = MutableInteractionSource()
 
     override val isScrollInProgress by derivedStateOf {
-        (currentPage - settlePage).absoluteValue > 1e-6
+        (page - settlePage).absoluteValue > 1e-6
     }
 
     override fun dispatchRawDelta(delta: Float) = scrollableState.dispatchRawDelta(delta)
@@ -169,7 +169,7 @@ class LoopPagerState(
     }
 
     fun scrollToPage(page: Int) {
-        currentPage = page.toFloat()
+        this.page = page.toFloat()
         targetPage = page
     }
 
@@ -178,7 +178,7 @@ class LoopPagerState(
         fun Saver(
             pageCount: Int,
         ): Saver<LoopPagerState, Int> = Saver(
-            save = { it.snapPage },
+            save = { it.currentPage },
             restore = {
                 LoopPagerState(
                     pageCount = pageCount,
