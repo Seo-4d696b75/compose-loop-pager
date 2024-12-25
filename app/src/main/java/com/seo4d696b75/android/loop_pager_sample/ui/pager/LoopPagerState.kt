@@ -1,5 +1,8 @@
 package com.seo4d696b75.android.loop_pager_sample.ui.pager
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.ScrollableState
@@ -164,8 +167,29 @@ class LoopPagerState(
 
     override val canScrollBackward = true
 
-    suspend fun animateScrollToPage(page: Int) {
-        // TODO
+    suspend fun animateScrollToPage(
+        page: Int,
+        animationSpec: AnimationSpec<Float> = spring(),
+    ) {
+        val interval = pageSize
+        if (interval > 0) {
+            scroll {
+                targetPage = page
+                val scrollAmount = -(page - this@LoopPagerState.page) * interval
+                var previous = 0f
+                animate(
+                    initialValue = 0f,
+                    targetValue = scrollAmount,
+                    animationSpec = animationSpec,
+                ) { current, _ ->
+                    val delta = current - previous
+                    val consumed = scrollBy(delta)
+                    previous += consumed
+                }
+            }
+        } else {
+            scrollToPage(page)
+        }
     }
 
     fun scrollToPage(page: Int) {
