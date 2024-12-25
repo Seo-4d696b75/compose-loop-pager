@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.seo4d696b75.android.loop_pager_sample.ui.orientation.asScope
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
@@ -27,6 +26,7 @@ import kotlin.math.roundToInt
  * @param aspectRatio a ratio `width / height` of each page size.
  * @param contentPadding a padding around the whole content.
  *   Only horizontal sides of this padding are applied.
+ * @param pageSpacing The space to separate the pages in this pager.
  * @param flingBehavior Used to control snap or fling animation after user scrolling.
  * @param content composable of each page.
  */
@@ -62,6 +62,7 @@ fun HorizontalLoopPager(
  * @param aspectRatio a ratio `width / height` of each page size.
  * @param contentPadding a padding around the whole content.
  *   Only vertical sides of this padding are applied.
+ * @param pageSpacing The space to separate the pages in this pager.
  * @param flingBehavior Used to control snap or fling animation after user scrolling.
  * @param content composable of each page.
  */
@@ -115,25 +116,21 @@ private fun LoopPager(
         measurePolicy = { constraints ->
             with(orientation.asScope()) {
                 // max width from constraints and contentPadding
-                val containerSize = constraints.maxSizeInMainAxis
+                val viewportSize = constraints.maxSizeInMainAxis
                 val pageSpacingPx = pageSpacing.roundToPx()
                 require(pageSpacingPx >= 0) {
                     "pageSpacing must be >= 0"
                 }
 
-                val startPadding = max(
-                    pageSpacingPx,
-                    contentPadding.calculateStartPaddingInMainAxis(layoutDirection).roundToPx(),
-                )
-                val endPadding = max(
-                    pageSpacingPx,
-                    contentPadding.calculateEndPaddingInMainAxis(layoutDirection).roundToPx(),
-                )
-                val pageSize = containerSize - startPadding - endPadding
-                require(pageSize > 0 && startPadding < pageSize / 2 && endPadding < pageSize / 2) {
+                val beforePadding =
+                    contentPadding.calculateStartPaddingInMainAxis(layoutDirection).roundToPx()
+                val afterPadding =
+                    contentPadding.calculateEndPaddingInMainAxis(layoutDirection).roundToPx()
+                val pageSize = viewportSize - beforePadding - afterPadding
+                require(pageSize > 0 && beforePadding < pageSize / 2 && afterPadding < pageSize / 2) {
                     "contentPadding or pageSpacing too large against constraints!"
                 }
-                require(itemProvider.itemCount >= 3 || startPadding <= pageSpacingPx || endPadding <= pageSpacingPx) {
+                require(itemProvider.itemCount >= 3 || beforePadding <= 0 || afterPadding <= 0) {
                     "more than 3 items required when both start and end contentPadding set"
                 }
 
@@ -143,8 +140,17 @@ private fun LoopPager(
                     maximumValue = constraints.maxSizeInCrossAxis,
                 )
 
+                val layoutInfo = LoopPagerLayoutInfo.Measured(
+                    viewportSize = viewportSize,
+                    viewportSizeInCrossAxis = sizeInCrossAxis,
+                    pageSize = pageSize,
+                    pageSpacing = pageSpacingPx,
+                    beforeContentPadding = beforePadding,
+                    afterContentPadding = afterPadding,
+                )
+
                 // page indices to be drawn (may be negative!)
-                val indices = state.onLayout(containerSize, pageSize, startPadding)
+                val indices = state.onLayout(layoutInfo)
 
                 // constraints for drawing each page
                 val pageConstraints = orientedConstraints(
@@ -161,8 +167,8 @@ private fun LoopPager(
                 }
 
                 layout(
-                    width = horizontalOf(containerSize, sizeInCrossAxis),
-                    height = verticalOf(containerSize, sizeInCrossAxis),
+                    width = horizontalOf(viewportSize, sizeInCrossAxis),
+                    height = verticalOf(viewportSize, sizeInCrossAxis),
                 ) {
                     placeableMap.forEach { (index, placeables) ->
                         // calculate position to be drawn at

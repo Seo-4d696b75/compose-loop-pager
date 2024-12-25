@@ -13,6 +13,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -61,6 +62,19 @@ class LoopPagerState(
      * This index may be
      * - negative value
      * - non-integer while scrolling or snap (fling) animation running.
+     *
+     * This index can also be interpreted as the scroll amount
+     * normalized in page interval (page size + spacing).
+     * Note: the sign is opposite to that of scroll value in pixels.
+     *
+     * The zero point of this index is defined as the first displayed state:
+     *
+     * ```
+     *  viewport of pager
+     * ┌────────────────────┬──────────┬───────────────────┐
+     * │beforeContentPadding│ pageSize │afterContentPadding│
+     * └────────────────────┴──────────┴───────────────────┘
+     * ```
      */
     var page: Float by mutableFloatStateOf(initialPage.toFloat())
         internal set
@@ -72,18 +86,10 @@ class LoopPagerState(
      * when no scroll or snap (fling) animation is running ([isScrollInProgress] == `false`).
      * This snap position only takes account of the scroll offset,
      * not the current scroll (fling) velocity.
+     *
+     * The threshold of snap position is 50% of page interval (page size + spacing).
      */
     val currentPage: Int by derivedStateOf {
-        /*val pageSize = this.pageSize
-        val pageSpacing = this.pageSpacing
-        val adjustedPage = if (pageSize == 0 || pageSpacing == 0) {
-            currentPage
-        } else {
-            val pageInterval = pageSize + pageSpacing
-            val diff = pageSpacing * 0.5f / pageInterval
-            currentPage + diff
-        }
-        adjustedPage.roundToInt()*/
         page.roundToInt()
     }
 
@@ -116,23 +122,51 @@ class LoopPagerState(
         }
     }
 
-    internal var pageSize: Int = 0
-    private var startPadding: Int = 0
+    /**
+     * A [LoopPagerLayoutInfo] that contains useful dimension values about the pager layout.
+     */
+    var layoutInfo: LoopPagerLayoutInfo by mutableStateOf(LoopPagerLayoutInfo.Zero)
+        private set
+
+    fun requireLayoutInfo() = layoutInfo as? LoopPagerLayoutInfo.Measured
+        ?: throw IllegalStateException("pager not layout yet")
 
     /**
      * Updates layout size and get page indices to be shown
      */
-    internal fun onLayout(
-        containerSize: Int,
-        pageSize: Int,
-        startPadding: Int,
-    ): Iterable<Int> {
-        this.pageSize = pageSize
-        this.startPadding = startPadding
-        val start = -startPadding.toFloat() / pageSize + page
-        val end = start + containerSize / pageSize
+    internal fun onLayout(layoutInfo: LoopPagerLayoutInfo.Measured): Iterable<Int> {
+        this.layoutInfo = layoutInfo
 
-        return floor(start).roundToInt()..ceil(end).roundToInt()
+        // normalized dimension
+        val interval = layoutInfo.pageInterval.toFloat()
+        val pageSize = layoutInfo.pageSize / interval
+
+        /*  range of viewport measured in below coordinate
+         *
+         *    page interval
+         *   ┌──────────┬─────────────┐
+         *   │ pageSize │ pageSpacing │
+         *   └──────────┴─────────────┘
+         * ──┼────────────────────────┼───────────────➤ page
+         *   0                        1
+         */
+        val start = page - layoutInfo.beforeContentPadding / interval
+        val end = start + layoutInfo.viewportSize / interval
+
+        val lower = floor(start).let {
+            if (start - it > pageSize) {
+                // only pageSpacing after `it` page is visible
+                it + 1
+            } else {
+                it
+            }
+        }.roundToInt()
+
+        val upper = ceil(end).roundToInt()
+
+        require(lower <= upper)
+
+        return lower..upper
     }
 
     /**
@@ -141,19 +175,20 @@ class LoopPagerState(
      * This offset value is relative to the start (horizontal) or
      * the top (vertical) of the pager container.
      */
-    fun offset(page: Int): Int {
-        return (startPadding + pageSize * (page - this.page)).roundToInt()
+    fun offset(page: Int): Int = with(requireLayoutInfo()) {
+        (beforeContentPadding + pageInterval * (page - this@LoopPagerState.page)).roundToInt()
     }
 
     // scroll logic
     private fun performScroll(delta: Float): Float {
-        val interval = pageSize
-        return if (interval > 0) {
-            page -= (delta / interval)
-            // consume all scroll amount
-            delta
-        } else {
-            0f
+        return when (val info = layoutInfo) {
+            is LoopPagerLayoutInfo.Measured -> {
+                page -= (delta / info.pageInterval)
+                // consume all scroll amount
+                delta
+            }
+
+            LoopPagerLayoutInfo.Zero -> 0f
         }
     }
 
@@ -187,11 +222,10 @@ class LoopPagerState(
         page: Int,
         animationSpec: AnimationSpec<Float> = spring(),
     ) {
-        val interval = pageSize
-        if (interval > 0) {
-            scroll {
+        when (val info = layoutInfo) {
+            is LoopPagerLayoutInfo.Measured -> scroll {
                 targetPage = page
-                val scrollAmount = -(page - this@LoopPagerState.page) * interval
+                val scrollAmount = -(page - this@LoopPagerState.page) * info.pageInterval
                 var previous = 0f
                 animate(
                     initialValue = 0f,
@@ -203,8 +237,8 @@ class LoopPagerState(
                     previous += consumed
                 }
             }
-        } else {
-            scrollToPage(page)
+
+            LoopPagerLayoutInfo.Zero -> scrollToPage(page)
         }
     }
 
