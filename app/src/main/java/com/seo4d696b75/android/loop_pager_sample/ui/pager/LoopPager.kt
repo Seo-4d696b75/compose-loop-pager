@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.seo4d696b75.android.loop_pager_sample.ui.orientation.asScope
@@ -39,8 +38,6 @@ fun HorizontalLoopPager(
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
     flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
-    nestedScrollConnection: NestedScrollConnection =
-        LoopPagerDefaults.nestedScrollConnection(state, Orientation.Horizontal),
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -51,7 +48,6 @@ fun HorizontalLoopPager(
         contentPadding = contentPadding,
         pageSpacing = pageSpacing,
         flingBehavior = flingBehavior,
-        nestedScrollConnection = nestedScrollConnection,
         content = content,
     )
 }
@@ -77,8 +73,6 @@ fun VerticalLoopPager(
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
     flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
-    nestedScrollConnection: NestedScrollConnection =
-        LoopPagerDefaults.nestedScrollConnection(state, Orientation.Vertical),
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -89,7 +83,6 @@ fun VerticalLoopPager(
         contentPadding = contentPadding,
         pageSpacing = pageSpacing,
         flingBehavior = flingBehavior,
-        nestedScrollConnection = nestedScrollConnection,
         content = content,
     )
 }
@@ -104,8 +97,6 @@ private fun LoopPager(
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
     flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
-    nestedScrollConnection: NestedScrollConnection =
-        LoopPagerDefaults.nestedScrollConnection(state, orientation),
     content: @Composable (page: Int) -> Unit,
 ) {
     val itemProvider = rememberPagerItemProvider(state.pageCount, content)
