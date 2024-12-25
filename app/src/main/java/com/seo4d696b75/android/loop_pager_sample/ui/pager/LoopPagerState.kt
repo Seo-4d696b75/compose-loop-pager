@@ -134,7 +134,13 @@ class LoopPagerState(
         return floor(start).roundToInt()..ceil(end).roundToInt()
     }
 
-    internal fun calculatePosition(page: Int): Int {
+    /**
+     * Gets main axis offset of the specified page in pixels.
+     *
+     * This offset value is relative to the start (horizontal) or
+     * the top (vertical) of the pager container.
+     */
+    fun offset(page: Int): Int {
         return (startPadding + pageSize * (page - this.page)).roundToInt()
     }
 

@@ -149,11 +149,11 @@ private fun LoopPager(
                 ) {
                     placeableMap.forEach { (index, placeables) ->
                         // calculate position to be drawn at
-                        val positionInMainAxis = state.calculatePosition(index)
+                        val offsetInMainAxis = state.offset(index)
                         placeables.forEach { placeable ->
                             placeable.placeRelative(
-                                x = horizontalOf(positionInMainAxis, 0),
-                                y = verticalOf(positionInMainAxis, 0),
+                                x = horizontalOf(offsetInMainAxis, 0),
+                                y = verticalOf(offsetInMainAxis, 0),
                             )
                         }
                     }
