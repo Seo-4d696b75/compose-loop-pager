@@ -17,20 +17,31 @@ But conventional implementation of pseudo-infinite scrolling, such as setting `p
 - ✅ Same user interaction and snap animation as `Horizontal/VerticalPager`
 - ✅ Page position is savable, can be restored
 
-
-<img src="https://github.com/Seo-4d696b75/compose-loop-pager/assets/25225028/d449651d-b3cb-4f47-a1d6-f71092c94dd9" width="320">
+<img src="capture/sample_loop_pager.gif">
 
 ## Usage
 
 ```kotlin
-    val items = remember { (0..4).toPersistentList() }
+val items = remember { (0..4).toPersistentList() }
 val state = rememberLoopPagerState(pageCount = items.size)
 
+// minimum usage
 HorizontalLoopPager(
+    state = state,
+    aspectRatio = 1f,
+) { page ->
+    val item = items[page]
+    // page composable
+}
+
+// custom usage
+VertivalLoopPager(
     state = state,
     aspectRatio = 1f,
     contentPadding = PaddingValues(horizontal = 48.dp),
     pageSpacing = 24.dp,
+    flingBehavior = LoopPagerDefaults.flingBehavior(state),
+    userScrollEnabled = true,
 ) { page ->
     val item = items[page]
     // page composable
