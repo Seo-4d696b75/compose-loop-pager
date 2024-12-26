@@ -133,7 +133,7 @@ fun LoopPagerSection(
             VerticalLoopPager(
                 state = verticalPagerState,
                 aspectRatio = 1f,
-                contentPadding = PaddingValues(top = 48.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(top = 24.dp, bottom = 48.dp),
                 pageSpacing = 24.dp,
                 modifier = Modifier.height(360.dp),
             ) { page ->
