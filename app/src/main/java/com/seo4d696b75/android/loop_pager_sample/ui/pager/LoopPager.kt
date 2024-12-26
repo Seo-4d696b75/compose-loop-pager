@@ -28,6 +28,8 @@ import kotlin.math.roundToInt
  *   Only horizontal sides of this padding are applied.
  * @param pageSpacing The space to separate the pages in this pager.
  * @param flingBehavior Used to control snap or fling animation after user scrolling.
+ * @param userScrollEnabled whether the scrolling via the user gestures is allowed.
+ *   You can still scroll programmatically via [LoopPagerState] even when it is disabled.
  * @param content composable of each page.
  */
 @Composable
@@ -38,6 +40,7 @@ fun HorizontalLoopPager(
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
     flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
+    userScrollEnabled: Boolean = true,
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -48,6 +51,7 @@ fun HorizontalLoopPager(
         contentPadding = contentPadding,
         pageSpacing = pageSpacing,
         flingBehavior = flingBehavior,
+        userScrollEnabled = userScrollEnabled,
         content = content,
     )
 }
@@ -64,6 +68,8 @@ fun HorizontalLoopPager(
  *   Only vertical sides of this padding are applied.
  * @param pageSpacing The space to separate the pages in this pager.
  * @param flingBehavior Used to control snap or fling animation after user scrolling.
+ * @param userScrollEnabled whether the scrolling via the user gestures is allowed.
+ *   You can still scroll programmatically via [LoopPagerState] even when it is disabled.
  * @param content composable of each page.
  */
 @Composable
@@ -74,6 +80,7 @@ fun VerticalLoopPager(
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
     flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
+    userScrollEnabled: Boolean = true,
     content: @Composable (page: Int) -> Unit,
 ) {
     LoopPager(
@@ -84,6 +91,7 @@ fun VerticalLoopPager(
         contentPadding = contentPadding,
         pageSpacing = pageSpacing,
         flingBehavior = flingBehavior,
+        userScrollEnabled = userScrollEnabled,
         content = content,
     )
 }
@@ -98,6 +106,7 @@ private fun LoopPager(
     contentPadding: PaddingValues = PaddingValues(),
     pageSpacing: Dp = 0.dp,
     flingBehavior: TargetedFlingBehavior = LoopPagerDefaults.flingBehavior(state),
+    userScrollEnabled: Boolean = true,
     content: @Composable (page: Int) -> Unit,
 ) {
     val itemProvider = rememberPagerItemProvider(state.pageCount, content)
@@ -188,7 +197,7 @@ private fun LoopPager(
             .scrollable(
                 state = state,
                 orientation = orientation,
-                enabled = true,
+                enabled = userScrollEnabled,
                 flingBehavior = flingBehavior,
                 interactionSource = state.interactionSource,
             ),
