@@ -111,7 +111,7 @@ class LoopPagerState(
      * this index is NOT changed while user scrolling or snap (fling) animation running
      * ([isScrollInProgress] == `true`).
      */
-    val settlePage: Int by derivedStateOf {
+    val settledPage: Int by derivedStateOf {
         val current = this.page
         val target = this.targetPage
         if ((target - current).absoluteValue < 1e-6) {
@@ -195,7 +195,7 @@ class LoopPagerState(
     internal val interactionSource = MutableInteractionSource()
 
     override val isScrollInProgress by derivedStateOf {
-        (page - settlePage).absoluteValue > 1e-6
+        (page - settledPage).absoluteValue > 1e-6
     }
 
     override fun dispatchRawDelta(delta: Float) = scrollableState.dispatchRawDelta(delta)

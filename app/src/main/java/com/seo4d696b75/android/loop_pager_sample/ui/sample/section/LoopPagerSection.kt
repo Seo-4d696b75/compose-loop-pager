@@ -74,11 +74,11 @@ fun LoopPagerSection(
         val animate = remember(scope) {
             { diff: Int ->
                 scope.launch {
-                    val page = horizontalPagerState.settlePage + diff
+                    val page = horizontalPagerState.settledPage + diff
                     horizontalPagerState.animateScrollToPage(page)
                 }
                 scope.launch {
-                    val page = verticalPagerState.settlePage + diff
+                    val page = verticalPagerState.settledPage + diff
                     verticalPagerState.animateScrollToPage(page)
                 }
             }
