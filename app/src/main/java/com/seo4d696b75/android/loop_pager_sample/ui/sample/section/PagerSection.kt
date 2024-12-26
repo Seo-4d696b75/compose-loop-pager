@@ -33,8 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.seo4d696b75.android.loop_pager_sample.ui.nestedscroll.filterUserInput
 import com.seo4d696b75.android.loop_pager_sample.ui.theme.MyTheme
+import com.seo4d696b75.compose.pager.filterUserInput
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 

@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.loop_pager_sample.ui.nestedscroll
+package com.seo4d696b75.compose.pager
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

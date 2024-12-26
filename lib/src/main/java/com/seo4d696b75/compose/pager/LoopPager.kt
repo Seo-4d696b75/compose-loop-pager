@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.loop_pager_sample.ui.pager
+package com.seo4d696b75.compose.pager
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.seo4d696b75.android.loop_pager_sample.ui.orientation.asScope
 import kotlin.math.roundToInt
 
 /**

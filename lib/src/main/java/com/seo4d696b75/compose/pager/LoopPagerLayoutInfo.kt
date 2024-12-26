@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.loop_pager_sample.ui.pager
+package com.seo4d696b75.compose.pager
 
 import androidx.compose.runtime.Immutable
 
