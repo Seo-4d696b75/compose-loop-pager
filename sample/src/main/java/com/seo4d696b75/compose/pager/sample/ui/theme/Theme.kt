@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.loop_pager_sample.ui.theme
+package com.seo4d696b75.compose.pager.sample.ui.theme
 
 import android.app.Activity
 import android.os.Build

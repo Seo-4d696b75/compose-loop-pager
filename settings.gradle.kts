@@ -20,5 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "loop-pager-sample"
-include(":app")
+include(":sample")
 include(":lib")

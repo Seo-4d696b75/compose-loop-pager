@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.seo4d696b75.android.loop_pager_sample"
+    namespace = "com.seo4d696b75.compose.pager.sample"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.seo4d696b75.android.loop_pager_sample"
+        applicationId = "com.seo4d696b75.compose.pager.sample"
         minSdk = 27
         targetSdk = 34
         versionCode = 1

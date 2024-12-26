@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.loop_pager_sample.ui.sample
+package com.seo4d696b75.compose.pager.sample.ui.sample
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,9 +19,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.seo4d696b75.android.loop_pager_sample.ui.sample.section.LoopPagerSection
-import com.seo4d696b75.android.loop_pager_sample.ui.sample.section.PagerSection
-import com.seo4d696b75.android.loop_pager_sample.ui.theme.MyTheme
+import com.seo4d696b75.compose.pager.sample.ui.sample.section.LoopPagerSection
+import com.seo4d696b75.compose.pager.sample.ui.sample.section.PagerSection
+import com.seo4d696b75.compose.pager.sample.ui.theme.MyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
