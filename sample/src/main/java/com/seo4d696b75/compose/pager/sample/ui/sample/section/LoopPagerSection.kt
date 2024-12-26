@@ -1,6 +1,5 @@
 package com.seo4d696b75.compose.pager.sample.ui.sample.section
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -22,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -57,15 +54,6 @@ fun LoopPagerSection(
     ) {
         val items = remember {
             (0..4).toPersistentList()
-        }
-        val state = rememberPagerState { items.size }
-        val info = state.layoutInfo
-        LaunchedEffect(info) {
-            Log.d(
-                "PagerLayoutInfo",
-                "size: ${info.pageSize} spacing: ${info.pageSpacing}" +
-                        " viewport ${info.viewportSize}(${info.beforeContentPadding}, ${info.afterContentPadding})"
-            )
         }
         val horizontalPagerState = rememberLoopPagerState(pageCount = items.size)
         val verticalPagerState = rememberLoopPagerState(pageCount = items.size)
