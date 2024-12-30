@@ -55,3 +55,30 @@ VertivalLoopPager(
     // page composable
 }
 ```
+
+## Difference with normal Pager
+
+### In case of few pages
+
+LoopPager is always scrollable, and same pages may be visible at one time.
+
+<img src="capture/sample_few_pages.gif">
+
+### API difference
+
+`LoopHorizontal/VerticalPager` are designed with the same interface as `Horizontal/VerticalPager`,
+but some features are not supported yet.
+
+| feature | Normal Pager | LoopPager |  
+|:-----|:---------|:---------|  
+| The state to control the pager | `state: PagerState` | `state: LoopPagerState` | 
+| how to define page size | `pageSize: PageSize` | `aspectRatio: Float` |  
+| default snap and fling animation | `PagerDefaults.flingBehavior()` | `LoopPagerDefaults.flingBehavior()` |  
+| padding around the whole content | `contentPadding: PaddingValues` | ⭕️ same |  
+| space betwen pages | `pageSpacing: Dp` | ⭕️ same |  
+| enabled | `userScrollEnabled: Boolena` | ⭕️ same |  
+| pre-load of pages | `beyondViewportPageCount: Int` | ❌️ not supported |  
+| reverse scroll direction | `reverseLayout: Boolean` | ❌️ not supported |  
+| nested scroll | `pageNestedScrollConnection: NestedScrollConnection` | ❌️ not supported |  
+| snap posistion | `snapPosition: SnapPosition` | ❌️ not supported |  
+
