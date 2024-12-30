@@ -1,11 +1,15 @@
 # Compose Loop Pager
 
-Android library of a loop pager implemented with Jetpack Compose.
+Android library of a loop pager implemented by Jetpack Compose.
 
 ## Motivation
 
-Now [accompanist-pager](https://github.com/google/accompanist/tree/main/pager) is deprecated, then `androidx.compose.foundation.pager` should be used instead. 
-But conventional implementation of pseudo-infinite scrolling, such as setting `pageCount = { Int.MAX_VALUE }`, results in ANR as of 1.6.4 (BOM 2024.03.00).
+Now [accompanist-pager](https://github.com/google/accompanist/tree/main/pager) is deprecated,
+then `androidx.compose.foundation.pager`
+should be used instead.
+But conventional implementation of pseudo-infinite scrolling,
+such as setting `pageCount = { Int.MAX_VALUE }`,
+results in ANR as of 1.6.4 (BOM 2024.03.00).
 
 ## Features
 
@@ -38,9 +42,13 @@ HorizontalLoopPager(
 VertivalLoopPager(
     state = state,
     aspectRatio = 1f,
-    contentPadding = PaddingValues(horizontal = 48.dp),
+    contentPadding = PaddingValues(vertical = 48.dp),
     pageSpacing = 24.dp,
-    flingBehavior = LoopPagerDefaults.flingBehavior(state),
+    flingBehavior = LoopPagerDefaults.flingBehavior(
+        state = state,
+        snapAnimationSpec = tween(),
+        decayAnimationSpec = exponentialDecay(),
+    ),
     userScrollEnabled = true,
 ) { page ->
     val item = items[page]
