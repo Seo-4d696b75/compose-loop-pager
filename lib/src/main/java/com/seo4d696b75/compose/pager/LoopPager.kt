@@ -1,5 +1,6 @@
 package com.seo4d696b75.compose.pager
 
+import androidx.collection.mutableIntSetOf
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.TargetedFlingBehavior
@@ -113,11 +114,6 @@ private fun LoopPager(
         { itemProvider }
     }
 
-    if (itemProvider.itemCount < 2) {
-        // crash when scrolling
-        return
-    }
-
     LazyLayout(
         itemProvider = itemProviderLambda,
         prefetchState = null,
@@ -138,9 +134,6 @@ private fun LoopPager(
                 require(pageSize > 0 && beforePadding < pageSize / 2 && afterPadding < pageSize / 2) {
                     "contentPadding or pageSpacing too large against constraints!"
                 }
-                require(itemProvider.itemCount >= 3 || beforePadding <= 0 || afterPadding <= 0) {
-                    "more than 3 items required when both start and end contentPadding set"
-                }
 
                 // calculate cross axis size from aspectRation
                 val sizeInCrossAxis = pageSize.toCrossAxis(aspectRatio).roundToInt().coerceIn(
@@ -158,7 +151,8 @@ private fun LoopPager(
                 )
 
                 // page indices to be drawn (may be negative!)
-                val indices = state.onLayout(layoutInfo)
+                val indices = state.onLayout(layoutInfo).toList()
+                itemProvider.updateVisiblePageCount(indices.size)
 
                 // constraints for drawing each page
                 val pageConstraints = orientedConstraints(
@@ -168,9 +162,18 @@ private fun LoopPager(
                     maxSizeInCrossAxis = sizeInCrossAxis,
                 )
 
+                // measure
+                val measuredIndices = mutableIntSetOf()
                 val placeableMap = indices.associateWith {
                     // index must be normalized in [0, size)
-                    val index = it.mod(itemProvider.itemCount)
+                    var index = it.mod(itemProvider.pageCount)
+                    // a page with the same index may already be measured
+                    while (true) {
+                        if (measuredIndices.add(index)) {
+                            break
+                        }
+                        index += itemProvider.pageCount
+                    }
                     measure(index, pageConstraints)
                 }
 

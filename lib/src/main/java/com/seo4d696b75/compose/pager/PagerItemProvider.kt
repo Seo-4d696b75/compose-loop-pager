@@ -7,30 +7,51 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 @Composable
 internal fun rememberPagerItemProvider(
-    itemCount: Int,
+    pageCount: Int,
     content: @Composable (index: Int) -> Unit,
-): PagerItemProvider = remember { PagerItemProvider(itemCount, content) }.apply {
-    itemCountState.intValue = itemCount
-    contentState.value = content
+): PagerItemProvider = remember { PagerItemProvider() }.apply {
+    update(pageCount, content)
 }
 
-
 @OptIn(ExperimentalFoundationApi::class)
-internal class PagerItemProvider(
-    itemCount: Int,
-    content: @Composable (Int) -> Unit,
-) : LazyLayoutItemProvider {
+internal class PagerItemProvider : LazyLayoutItemProvider {
 
-    val itemCountState = mutableIntStateOf(itemCount)
-    val contentState = mutableStateOf(content)
+    var pageCount = 0
+        private set
+
+    private var visiblePageCount = 0
+
+    private var itemCountState = mutableIntStateOf(0)
+    private var content: (@Composable (Int) -> Unit) by mutableStateOf({})
+
+    fun update(
+        pageCount: Int,
+        content: @Composable (Int) -> Unit,
+    ) {
+        if (this.pageCount != pageCount) {
+            this.pageCount = pageCount
+            this.visiblePageCount = pageCount
+            itemCountState.intValue = pageCount
+        }
+        this.content = content
+    }
+
+    fun updateVisiblePageCount(count: Int) {
+        // update if needed
+        visiblePageCount = count.coerceAtLeast(visiblePageCount)
+        // may be > pageCount if same pages are displayed simultaneously
+        itemCountState.intValue = visiblePageCount.coerceAtLeast(pageCount)
+    }
 
     override val itemCount by itemCountState
 
     @Composable
     override fun Item(index: Int, key: Any) {
-        contentState.value.invoke(index)
+        val normalized = index.mod(pageCount)
+        content.invoke(normalized)
     }
 }
