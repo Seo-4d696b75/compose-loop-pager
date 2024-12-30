@@ -2,6 +2,12 @@
 
 Android library of a loop pager implemented by Jetpack Compose.
 
+[![Maven version](https://img.shields.io/maven-central/v/com.seo4d696b75.compose/loop-pager)](https://central.sonatype.com/artifact/com.seo4d696b75.compose/loop-pager)
+
+
+![License MIT](https://img.shields.io/badge/MIT-9E9F9F?label=License)
+![Android minimum version](https://img.shields.io/badge/26+-9E9F9F?&label=Minimum&logo=android)
+
 ## Motivation
 
 Now [accompanist-pager](https://github.com/google/accompanist/tree/main/pager) is deprecated,
@@ -22,6 +28,16 @@ results in ANR as of 1.6.4 (BOM 2024.03.00).
 - ✅ Page position is savable, can be restored
 
 <img src="capture/sample_loop_pager.gif">
+
+## Installation
+
+In your module level `build.gradle` file
+
+```gradle
+dependencies {
+    implementation("com.seo4d696b75.compose:loop-pager:$version")
+}
+```
 
 ## Usage
 
