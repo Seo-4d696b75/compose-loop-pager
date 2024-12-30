@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.seo4d696b75.compose.pager"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
@@ -29,6 +29,13 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+        val reportDir = layout.buildDirectory.dir("compose_compiler").get().asFile.absolutePath
+        freeCompilerArgs += listOf(
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$reportDir",
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$reportDir"
+        )
     }
     buildFeatures {
         compose = true
@@ -39,10 +46,6 @@ android {
 }
 
 dependencies {
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-
     implementation(libs.androidx.core.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
