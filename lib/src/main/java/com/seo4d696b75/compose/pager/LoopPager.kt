@@ -1,6 +1,5 @@
 package com.seo4d696b75.compose.pager
 
-import androidx.collection.mutableIntSetOf
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.TargetedFlingBehavior
@@ -151,8 +150,10 @@ private fun LoopPager(
                 )
 
                 // page indices to be drawn (may be negative!)
-                val indices = state.onLayout(layoutInfo).toList()
-                itemProvider.updateVisiblePageCount(indices.size)
+                val pages = state.onLayout(layoutInfo).toList()
+
+                // convert to item indices
+                val indices = itemProvider.onLayout(pages)
 
                 // constraints for drawing each page
                 val pageConstraints = orientedConstraints(
@@ -163,27 +164,20 @@ private fun LoopPager(
                 )
 
                 // measure
-                val measuredIndices = mutableIntSetOf()
-                val placeableMap = indices.associateWith {
-                    // index must be normalized in [0, size)
-                    var index = it.mod(itemProvider.pageCount)
-                    // a page with the same index may already be measured
-                    while (true) {
-                        if (measuredIndices.add(index)) {
-                            break
-                        }
-                        index += itemProvider.pageCount
+                val placeableMap = pages
+                    .zip(indices)
+                    .associate { pair ->
+                        val (page, index) = pair
+                        page to measure(index, pageConstraints)
                     }
-                    measure(index, pageConstraints)
-                }
 
                 layout(
                     width = horizontalOf(viewportSize, sizeInCrossAxis),
                     height = verticalOf(viewportSize, sizeInCrossAxis),
                 ) {
-                    placeableMap.forEach { (index, placeables) ->
+                    placeableMap.forEach { (page, placeables) ->
                         // calculate position to be drawn at
-                        val offsetInMainAxis = state.offset(index)
+                        val offsetInMainAxis = state.offset(page)
                         placeables.forEach { placeable ->
                             placeable.placeRelative(
                                 x = horizontalOf(offsetInMainAxis, 0),

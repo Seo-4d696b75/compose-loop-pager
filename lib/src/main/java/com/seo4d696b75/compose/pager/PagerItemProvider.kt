@@ -20,12 +20,11 @@ internal fun rememberPagerItemProvider(
 @OptIn(ExperimentalFoundationApi::class)
 internal class PagerItemProvider : LazyLayoutItemProvider {
 
-    var pageCount = 0
+    private var pageCount = 0
+
+    override var itemCount by mutableIntStateOf(0)
         private set
 
-    private var visiblePageCount = 0
-
-    private var itemCountState = mutableIntStateOf(0)
     private var content: (@Composable (Int) -> Unit) by mutableStateOf({})
 
     fun update(
@@ -34,24 +33,38 @@ internal class PagerItemProvider : LazyLayoutItemProvider {
     ) {
         if (this.pageCount != pageCount) {
             this.pageCount = pageCount
-            this.visiblePageCount = pageCount
-            itemCountState.intValue = pageCount
+            this.itemCount = pageCount
         }
         this.content = content
     }
 
-    fun updateVisiblePageCount(count: Int) {
-        // update if needed
-        visiblePageCount = count.coerceAtLeast(visiblePageCount)
+    /**
+     * Updates visible page range and
+     * gets item indices of LazyLayout to be measured and placed.
+     */
+    fun onLayout(visiblePages: List<Int>): List<Int> {
+        if (visiblePages.isEmpty()) {
+            return emptyList()
+        }
+
+        val firstPage = visiblePages.first()
+        val indices = visiblePages.map {
+            val normalized = it.mod(pageCount)
+            val cycle = (it - firstPage) / pageCount
+            normalized + cycle * pageCount
+        }
+
         // may be > pageCount if same pages are displayed simultaneously
-        itemCountState.intValue = visiblePageCount.coerceAtLeast(pageCount)
+        itemCount = (indices.max() + 1).coerceAtLeast(itemCount)
+
+        return indices
     }
 
-    override val itemCount by itemCountState
+    override fun getKey(index: Int) = index
 
     @Composable
     override fun Item(index: Int, key: Any) {
-        val normalized = index.mod(pageCount)
-        content.invoke(normalized)
+        val normalizedPage = index.mod(pageCount)
+        content.invoke(normalizedPage)
     }
 }
