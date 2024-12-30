@@ -18,7 +18,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import kotlin.math.absoluteValue
-import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
@@ -154,7 +153,7 @@ class LoopPagerState(
         val end = start + layoutInfo.viewportSize / interval
 
         val lower = floor(start).let {
-            if (start - it > pageSize) {
+            if (start - it >= pageSize) {
                 // only pageSpacing after `it` page is visible
                 it + 1
             } else {
@@ -162,7 +161,7 @@ class LoopPagerState(
             }
         }.roundToInt()
 
-        val upper = ceil(end).roundToInt()
+        val upper = floor(end).roundToInt()
 
         require(lower <= upper)
 
