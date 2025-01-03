@@ -28,6 +28,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version = "0.3.7" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+loop-pager = { group = "com.seo4d696b75.compose", name = "loop-pager", version.ref = "loopPager" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
