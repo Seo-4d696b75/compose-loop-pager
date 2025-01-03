@@ -27,33 +27,29 @@ import kotlin.math.roundToInt
  */
 @Composable
 fun rememberLoopPagerState(
-    pageCount: Int,
     initialPage: Int = 0,
+    pageCount: () -> Int,
 ): LoopPagerState {
     return rememberSaveable(
-        saver = LoopPagerState.Saver(
-            pageCount = pageCount,
-        )
+        saver = LoopPagerState.Saver,
     ) {
-        LoopPagerState(
-            pageCount = pageCount,
-            initialPage = initialPage,
-        )
+        LoopPagerState(initialPage)
     }.also {
-        it.pageCount = pageCount
+        it.pageCountLambda = pageCount
     }
 }
 
 @Stable
 class LoopPagerState(
-    pageCount: Int,
     initialPage: Int,
 ) : ScrollableState {
 
     private val scrollableState = ScrollableState(::performScroll)
 
-    var pageCount by mutableIntStateOf(pageCount)
-        internal set
+    internal var pageCountLambda by mutableStateOf({ 0 })
+
+    val pageCount: Int
+        get() = pageCountLambda.invoke()
 
     /**
      * Current page index.
@@ -253,16 +249,9 @@ class LoopPagerState(
 
     companion object {
         // current page is saved and will be restored
-        fun Saver(
-            pageCount: Int,
-        ): Saver<LoopPagerState, Int> = Saver(
+        val Saver: Saver<LoopPagerState, Int> = Saver(
             save = { it.currentPage },
-            restore = {
-                LoopPagerState(
-                    pageCount = pageCount,
-                    initialPage = it,
-                )
-            },
+            restore = { LoopPagerState(it) },
         )
     }
 }

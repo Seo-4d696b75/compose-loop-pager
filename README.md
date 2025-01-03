@@ -43,7 +43,7 @@ dependencies {
 
 ```kotlin
 val items = remember { (0..4).toPersistentList() }
-val state = rememberLoopPagerState(pageCount = items.size)
+val state = rememberLoopPagerState { items.size }
 
 // minimum usage
 HorizontalLoopPager(

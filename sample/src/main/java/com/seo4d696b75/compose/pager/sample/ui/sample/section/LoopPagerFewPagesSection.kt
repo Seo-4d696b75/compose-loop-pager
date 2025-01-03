@@ -38,8 +38,8 @@ fun LoopPagerFewPagesSection(
             )
         },
     ) {
-        val state = rememberLoopPagerState(pageCount = 1)
-        val state2 = rememberLoopPagerState(pageCount = 2)
+        val state = rememberLoopPagerState { 1 }
+        val state2 = rememberLoopPagerState { 2 }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

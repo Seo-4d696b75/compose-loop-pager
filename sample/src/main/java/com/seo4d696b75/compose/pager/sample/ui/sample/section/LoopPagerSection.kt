@@ -55,8 +55,8 @@ fun LoopPagerSection(
         val items = remember {
             (0..4).toPersistentList()
         }
-        val horizontalPagerState = rememberLoopPagerState(pageCount = items.size)
-        val verticalPagerState = rememberLoopPagerState(pageCount = items.size)
+        val horizontalPagerState = rememberLoopPagerState { items.size }
+        val verticalPagerState = rememberLoopPagerState { items.size }
 
         val scope = rememberCoroutineScope()
         val animate = remember(scope) {
