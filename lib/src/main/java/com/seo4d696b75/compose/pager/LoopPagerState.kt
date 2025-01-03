@@ -235,6 +235,8 @@ class LoopPagerState(
                     val consumed = scrollBy(delta)
                     previous += consumed
                 }
+                // Cumulative error of delta may be impossible to be ignored
+                this@LoopPagerState.page = page.toFloat()
             }
 
             LoopPagerLayoutInfo.Zero -> scrollToPage(page)
