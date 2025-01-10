@@ -42,7 +42,7 @@ dependencies {
 ## Usage
 
 ```kotlin
-val items = remember { (0..4).toPersistentList() }
+val items = remember { (0..4).toList() }
 val state = rememberLoopPagerState { items.size }
 
 // minimum usage
@@ -51,7 +51,7 @@ HorizontalLoopPager(
     aspectRatio = 1f,
 ) { page ->
     val item = items[page]
-    // page composable
+    PageComposable(item)
 }
 
 // custom usage
@@ -68,7 +68,7 @@ VertivalLoopPager(
     userScrollEnabled = true,
 ) { page ->
     val item = items[page]
-    // page composable
+    PageComposable(item)
 }
 ```
 
