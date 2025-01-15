@@ -53,7 +53,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.loop.pager)
+    implementation(project(":lib"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
