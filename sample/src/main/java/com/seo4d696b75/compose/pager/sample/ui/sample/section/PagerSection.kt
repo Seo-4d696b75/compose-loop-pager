@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -56,7 +58,7 @@ fun PagerSection(
         },
     ) {
         val items = remember {
-            (0..4).toPersistentList()
+            (0..40).toPersistentList()
         }
         val horizontalPagerState = rememberPagerState { items.size }
         val verticalPagerState = rememberPagerState { items.size }
@@ -87,6 +89,18 @@ fun PagerSection(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 48.dp),
                 pageSpacing = 24.dp,
+                flingBehavior = PagerDefaults.flingBehavior(
+                    state = horizontalPagerState,
+                    pagerSnapDistance = object : PagerSnapDistance {
+                        override fun calculateTargetPage(
+                            startPage: Int,
+                            suggestedTargetPage: Int,
+                            velocity: Float,
+                            pageSize: Int,
+                            pageSpacing: Int
+                        ) = suggestedTargetPage
+                    },
+                )
             ) { page ->
                 val item = items[page]
                 Card(

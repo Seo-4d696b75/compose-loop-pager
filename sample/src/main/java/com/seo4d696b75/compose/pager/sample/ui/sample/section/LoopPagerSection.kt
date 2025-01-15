@@ -28,6 +28,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.seo4d696b75.compose.pager.HorizontalLoopPager
+import com.seo4d696b75.compose.pager.LoopPagerDefaults
+import com.seo4d696b75.compose.pager.LoopPagerSnapDistance
 import com.seo4d696b75.compose.pager.VerticalLoopPager
 import com.seo4d696b75.compose.pager.filterUserInput
 import com.seo4d696b75.compose.pager.rememberLoopPagerState
@@ -135,6 +137,10 @@ fun LoopPagerSection(
                 aspectRatio = 1f,
                 contentPadding = PaddingValues(top = 24.dp, bottom = 48.dp),
                 pageSpacing = 24.dp,
+                flingBehavior = LoopPagerDefaults.flingBehavior(
+                    state = verticalPagerState,
+                    pagerSnapDistance = LoopPagerSnapDistance.NoLimit,
+                ),
                 modifier = Modifier.height(360.dp),
             ) { page ->
                 val item = items[page]
