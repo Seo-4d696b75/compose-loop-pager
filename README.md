@@ -64,6 +64,8 @@ VertivalLoopPager(
         state = state,
         snapAnimationSpec = tween(),
         decayAnimationSpec = exponentialDecay(),
+        velocityThreshold = { 200.dp.toPx() },
+        pagerSnapDistance = LoopPagerSnapDistance.NoLimit,
     ),
     userScrollEnabled = true,
 ) { page ->
