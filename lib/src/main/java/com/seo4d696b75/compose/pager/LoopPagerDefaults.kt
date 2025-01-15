@@ -21,18 +21,42 @@ import kotlin.math.sign
 
 @Stable
 object LoopPagerDefaults {
+    /**
+     * Gets a [snapFlingBehavior] for loop pager.
+     *
+     * @param state loop pager state
+     * @param snapAnimationSpec The animation spec used to finally snap to the position.
+     * @param decayAnimationSpec The animation spec used to approach the target offset.
+     *   May not be used when the final snap position is close enough.
+     * @param velocityThreshold The threshold in pixels to detect a fling,
+     *   meaning whether the scroll velocity is large enough or not.
+     * @param pagerSnapDistance A way to control the snapping destination.
+     *   Default behavior: any fling with large velocity results in snapping to the next page
+     *   in the same direction of the fling.
+     */
     @Composable
     fun flingBehavior(
         state: LoopPagerState,
         snapAnimationSpec: AnimationSpec<Float> = spring(),
         decayAnimationSpec: DecayAnimationSpec<Float> = rememberSplineBasedDecay(),
         velocityThreshold: Density.() -> Float = { 400.dp.toPx() },
+        pagerSnapDistance: LoopPagerSnapDistance = LoopPagerSnapDistance.atMost(1),
     ): TargetedFlingBehavior {
         val density = LocalDensity.current
         val velocityThresholdPx = with(density) { velocityThreshold() }
-        return remember(state, snapAnimationSpec, decayAnimationSpec, velocityThresholdPx) {
+        return remember(
+            state,
+            snapAnimationSpec,
+            decayAnimationSpec,
+            velocityThresholdPx,
+            pagerSnapDistance,
+        ) {
             snapFlingBehavior(
-                snapLayoutInfoProvider = LoopPagerSnapLayoutProvider(state, velocityThresholdPx),
+                snapLayoutInfoProvider = LoopPagerSnapLayoutProvider(
+                    state = state,
+                    velocityThreshold = velocityThresholdPx,
+                    pagerSnapDistance = pagerSnapDistance,
+                ),
                 decayAnimationSpec = decayAnimationSpec,
                 snapAnimationSpec = snapAnimationSpec,
             )
@@ -43,6 +67,7 @@ object LoopPagerDefaults {
 internal class LoopPagerSnapLayoutProvider(
     private val state: LoopPagerState,
     private val velocityThreshold: Float,
+    private val pagerSnapDistance: LoopPagerSnapDistance,
 ) : SnapLayoutInfoProvider {
     override fun calculateSnapOffset(velocity: Float): Float {
         return when (val info = state.layoutInfo) {
@@ -73,8 +98,19 @@ internal class LoopPagerSnapLayoutProvider(
         return when (val info = state.layoutInfo) {
             is LoopPagerLayoutInfo.Measured -> {
                 val currentPage = state.page
+                val startPage = if (velocity > 0) {
+                    ceil(currentPage).roundToInt()
+                } else {
+                    floor(currentPage).roundToInt()
+                }
                 val decayPage = currentPage - decayOffset / info.pageInterval
-                val snapPage = decayPage.roundToInt()
+                val snapPage = pagerSnapDistance.calculateTargetPage(
+                    startPage = startPage,
+                    suggestedTargetPage = decayPage.roundToInt(),
+                    velocity = velocityThreshold,
+                    pageSize = info.pageSize,
+                    pageSpacing = info.pageSpacing,
+                )
                 val distance = (snapPage - currentPage).absoluteValue
 
                 // We'd like the approach animation to finish right before the last page so we can
