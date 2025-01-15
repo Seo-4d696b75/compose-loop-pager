@@ -2,6 +2,8 @@ package com.seo4d696b75.compose.pager
 
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.DecayAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.gestures.TargetedFlingBehavior
@@ -37,7 +39,10 @@ object LoopPagerDefaults {
     @Composable
     fun flingBehavior(
         state: LoopPagerState,
-        snapAnimationSpec: AnimationSpec<Float> = spring(),
+        snapAnimationSpec: AnimationSpec<Float> = spring(
+            stiffness = Spring.StiffnessMediumLow,
+            visibilityThreshold = Int.VisibilityThreshold.toFloat(),
+        ),
         decayAnimationSpec: DecayAnimationSpec<Float> = rememberSplineBasedDecay(),
         velocityThreshold: Density.() -> Float = { 400.dp.toPx() },
         pagerSnapDistance: LoopPagerSnapDistance = LoopPagerSnapDistance.atMost(1),
@@ -103,24 +108,30 @@ internal class LoopPagerSnapLayoutProvider(
                 } else {
                     floor(currentPage).roundToInt()
                 }
-                val decayPage = currentPage - decayOffset / info.pageInterval
-                val snapPage = pagerSnapDistance.calculateTargetPage(
+
+                // How many pages fit in the animation offset.
+                // Note: round toward zero so that absoluteValue should not be larger
+                val pageOffset = (decayOffset / info.pageInterval).toInt()
+                val suggestedTargetPage = startPage - pageOffset
+
+                // Apply the snap distance suggestion.
+                val targetPage = pagerSnapDistance.calculateTargetPage(
                     startPage = startPage,
-                    suggestedTargetPage = decayPage.roundToInt(),
+                    suggestedTargetPage = suggestedTargetPage,
                     velocity = velocityThreshold,
                     pageSize = info.pageSize,
                     pageSpacing = info.pageSpacing,
                 )
-                val distance = (snapPage - currentPage).absoluteValue
+                val distance = (targetPage - startPage).absoluteValue
 
                 // We'd like the approach animation to finish right before the last page so we can
                 // use a snapping animation for the rest (<= pageInterval).
-                val decayDistance = (distance - 1f).coerceAtLeast(0f)
+                val decayDistance = (distance - 1).coerceAtLeast(0)
 
-                return if (decayDistance == 0f) {
+                return if (decayDistance == 0) {
                     0f
                 } else {
-                    state.targetPage = snapPage
+                    state.targetPage = targetPage
                     decayDistance * info.pageInterval * velocity.sign
                 }
             }
