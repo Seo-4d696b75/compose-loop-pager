@@ -4,6 +4,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.compose.compiler)
     id("maven-publish")
     id("signing")
 }
@@ -34,19 +35,14 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
-        val reportDir = layout.buildDirectory.dir("compose_compiler").get().asFile.absolutePath
-        freeCompilerArgs += listOf(
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$reportDir",
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$reportDir"
-        )
+    }
+    composeCompiler {
+        val reportDir = layout.buildDirectory.dir("compose_compiler")
+        reportsDestination = reportDir
+        metricsDestination = reportDir
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
     }
     publishing {
         singleVariant("release") {
